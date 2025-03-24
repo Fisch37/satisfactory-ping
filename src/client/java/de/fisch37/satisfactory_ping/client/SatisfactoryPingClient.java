@@ -1,6 +1,7 @@
 package de.fisch37.satisfactory_ping.client;
 
 import de.fisch37.satisfactory_ping.packets.BlockPingPayload;
+import de.maxhenkel.configbuilder.ConfigBuilder;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
@@ -11,8 +12,13 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.text.Text;
 import net.minecraft.util.hit.HitResult;
 import org.lwjgl.glfw.GLFW;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.nio.file.Paths;
 import java.util.Objects;
+
+import static de.fisch37.satisfactory_ping.SatisfactoryPing.MOD_ID;
 
 public class SatisfactoryPingClient implements ClientModInitializer {
     public static final KeyBinding PING_KEYBIND = KeyBindingHelper.registerKeyBinding(new KeyBinding(
@@ -20,14 +26,20 @@ public class SatisfactoryPingClient implements ClientModInitializer {
             GLFW.GLFW_KEY_LEFT_ALT,
             KeyBinding.MISC_CATEGORY
     ));
+    public static final Logger LOGGER = LoggerFactory.getLogger("SatisfactoryPing/Client");
     public static final double MAX_CAST_DISTANCE = 512;
     private boolean triggerState = false;
     private SatisfactoryPingRenderingHook rendering;
+    private Config config;
 
     @Override
     public void onInitializeClient() {
+        config = loadConfig();
+
         SatisfactoryPingSound.initialize();
         rendering = new SatisfactoryPingRenderingHook(this);
+        rendering.setMinimumHeight(config.minimumIconHeight.get());
+        rendering.setApparentTextSize(config.textHeight.get());
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             final var useKey = Objects.requireNonNull(KeyBinding.byId("key.use"));
@@ -62,5 +74,20 @@ public class SatisfactoryPingClient implements ClientModInitializer {
                 client.player.clientWorld.getRegistryKey(),
                 pos, client.player.getUuid())
         );
+    }
+
+    private Config loadConfig() {
+        var path = Paths.get(".", "config", MOD_ID+".properties").toAbsolutePath();
+        var dir = path.getParent().toFile();
+        boolean createdSuccessfully;
+        try {
+            createdSuccessfully = dir.exists() || path.getParent().toFile().mkdirs();
+        } catch (SecurityException e) { createdSuccessfully = false; }
+        if (!createdSuccessfully)
+            LOGGER.error("Cannot create config folder at {}", path.getParent());
+        return ConfigBuilder.builder(Config::new)
+                .path(path)
+                .saveSyncAfterBuild(createdSuccessfully)
+                .build();
     }
 }
