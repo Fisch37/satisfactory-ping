@@ -1,4 +1,7 @@
 {
   "key.satisfactory_ping.ping": "Ping Location",
-  "subtitles.satisfactory_ping.ping": "Player pings"
+  "subtitles.satisfactory_ping.ping": "Player pings",
+  "options.satisfactory_ping.title": "Satisfactory Ping Settings",
+  "options.satisfactory_ping.icon_height": "Minimum Icon Height: %f°",
+  "options.satisfactory_ping.text_height": "Apparent Text Height: %f°"
 }

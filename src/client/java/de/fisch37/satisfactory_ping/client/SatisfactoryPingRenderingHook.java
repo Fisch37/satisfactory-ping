@@ -1,6 +1,7 @@
 package de.fisch37.satisfactory_ping.client;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import de.fisch37.satisfactory_ping.client.config.Config;
 import de.fisch37.satisfactory_ping.packets.BlockPingPayload;
 import net.fabricmc.fabric.api.client.rendering.v1.*;
 import net.minecraft.client.font.TextRenderer;
@@ -34,8 +35,8 @@ public class SatisfactoryPingRenderingHook {
     public SatisfactoryPingRenderingHook(SatisfactoryPingClient mod) {
         this.mod = mod;
         WorldRenderEvents.LAST.register(this::renderSequence);
-        setMinimumHeight(1.5);
-        setApparentTextSize(2.5);
+        setMinimumHeight(Config.DEFAULT_ICON_HEIGHT);
+        setApparentTextSize(Config.DEFAULT_TEXT_HEIGHT);
     }
 
     public void add(BlockPingPayload ping) {

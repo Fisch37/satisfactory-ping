@@ -1,5 +1,6 @@
 package de.fisch37.satisfactory_ping.client;
 
+import de.fisch37.satisfactory_ping.client.config.Config;
 import de.fisch37.satisfactory_ping.packets.BlockPingPayload;
 import de.maxhenkel.configbuilder.ConfigBuilder;
 import net.fabricmc.api.ClientModInitializer;
@@ -9,7 +10,6 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.sound.SoundCategory;
-import net.minecraft.text.Text;
 import net.minecraft.util.hit.HitResult;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
@@ -28,9 +28,10 @@ public class SatisfactoryPingClient implements ClientModInitializer {
     ));
     public static final Logger LOGGER = LoggerFactory.getLogger("SatisfactoryPing/Client");
     public static final double MAX_CAST_DISTANCE = 512;
+    private static SatisfactoryPingRenderingHook rendering;
+    private static Config config;
+
     private boolean triggerState = false;
-    private SatisfactoryPingRenderingHook rendering;
-    private Config config;
 
     @Override
     public void onInitializeClient() {
@@ -61,6 +62,14 @@ public class SatisfactoryPingClient implements ClientModInitializer {
                 rendering.add(payload);
             }
         });
+    }
+
+    public static SatisfactoryPingRenderingHook getRenderer() {
+        return rendering;
+    }
+
+    public static Config getConfig() {
+        return config;
     }
 
     public void sendPing(MinecraftClient client) {
