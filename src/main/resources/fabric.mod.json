@@ -18,11 +18,6 @@
     ]
   },
   "mixins": [
-    "satisfactory_ping.mixins.json",
-    {
-      "config": "satisfactory_ping.client.mixins.json",
-      "environment": "client"
-    }
   ],
   "depends": {
     "fabricloader": ">=${loader_version}",
