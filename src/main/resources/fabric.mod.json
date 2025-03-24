@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "satisfactory_ping",
+  "version": "${version}",
+  "name": "SatisfactoryPing",
+  "description": "",
+  "authors": [],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/satisfactory_ping/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "client": [
+      "de.fisch37.satisfactory_ping.client.SatisfactoryPingClient"
+    ],
+    "main": [
+      "de.fisch37.satisfactory_ping.SatisfactoryPing"
+    ]
+  },
+  "mixins": [
+    "satisfactory_ping.mixins.json",
+    {
+      "config": "satisfactory_ping.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}

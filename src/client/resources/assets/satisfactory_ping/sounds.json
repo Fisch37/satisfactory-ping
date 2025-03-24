@@ -1,0 +1,14 @@
+{
+  "ping": {
+    "subtitle": "subtitles.satisfactory_ping.ping",
+    "sounds": [
+      {
+        "name": "satisfactory_ping:ping",
+        "volume": 1.0,
+        "stream": false,
+        "attenuation_distance": 60000000,
+        "type": "file"
+      }
+    ]
+  }
+}
