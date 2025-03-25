@@ -27,6 +27,7 @@ public class SatisfactoryPingRenderingHook {
     private static final double PING_RENDER_TIME = 5_000;
 
     private final SatisfactoryPingClient mod;
+    private boolean irisWorkaroundEnabled = false;
     private final ConcurrentLinkedQueue<Pair<BlockPingPayload, Long>> renderQueue = new ConcurrentLinkedQueue<>();
     public double smallestApparentHeight;
     public double scalingFactor;
@@ -37,6 +38,30 @@ public class SatisfactoryPingRenderingHook {
         WorldRenderEvents.LAST.register(this::renderSequence);
         setMinimumHeight(Config.DEFAULT_ICON_HEIGHT);
         setApparentTextSize(Config.DEFAULT_TEXT_HEIGHT);
+    }
+
+    void enableIrisWorkaround() {
+        // Iris does some insane things to rendering that leads to my text always appearing <em>behind</em> the world, when Iris is installed,
+        // but only if I use the LAST render event. I need LAST tho because otherwise my icons appear behind translucent materials, which looks shit.
+        // I don't understand what Iris could possibly be doing to cause this, but since it is a very popular mod, I implemented this bullshit workaround
+        // I hope I'll come back and replace this with something that actually solves the issue at some point.
+
+        // This workaround isn't perfect either. For one, text now disappears up to one frame after the icon,
+        // but also since we're now rendering text before the translucency layer is drawn, text will be partially obscured by translucent blocks such as glass or water.
+        LOGGER.warn("Applied a workaround to fix text not rendering when Iris shaders is installed. You may encounter slight visual oddities with distance markers.");
+        irisWorkaroundEnabled = true;
+        WorldRenderEvents.AFTER_ENTITIES.register(context ->
+            renderQueue.forEach(pair -> {
+                var ping = pair.getLeft();
+                var diff = context.camera().getPos().subtract(ping.pos());
+                float scale = 0.25f;
+                final double distanceToCamera = diff.length();
+                double apparentHeight = 2*Math.atan(scale/distanceToCamera);
+                if (apparentHeight < smallestApparentHeight)
+                    scale = (float) (distanceToCamera*scalingFactor);
+                renderText(context, ping, scale, distanceToCamera);
+            })
+        );
     }
 
     public void add(BlockPingPayload ping) {
@@ -108,6 +133,10 @@ public class SatisfactoryPingRenderingHook {
         // Draw the buffer onto the screen.
         BufferRenderer.drawWithGlobalProgram(buffer.end());
 
+        if (!irisWorkaroundEnabled) renderText(context, ping, scale, distanceToCamera);
+    }
+
+    private void renderText(WorldRenderContext context, BlockPingPayload ping, double scale, double distanceToCamera) {
         final var fontHeight = 2*distanceToCamera*textScalingFactor;
         textHelper(context, ping.pos().subtract(0, scale+fontHeight, 0), (long)distanceToCamera + "m", (float)fontHeight);
     }
