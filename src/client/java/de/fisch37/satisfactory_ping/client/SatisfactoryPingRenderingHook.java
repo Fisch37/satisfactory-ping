@@ -6,6 +6,7 @@ import de.fisch37.satisfactory_ping.packets.BlockPingPayload;
 import net.fabricmc.fabric.api.client.rendering.v1.*;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gl.ShaderProgramKeys;
+import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.render.*;
 import net.minecraft.util.Colors;
 import net.minecraft.util.Identifier;
@@ -17,6 +18,7 @@ import org.joml.Vector3f;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static de.fisch37.satisfactory_ping.SatisfactoryPing.MOD_ID;
@@ -24,6 +26,7 @@ import static de.fisch37.satisfactory_ping.SatisfactoryPing.MOD_ID;
 public class SatisfactoryPingRenderingHook {
     private static final Logger LOGGER = LoggerFactory.getLogger("SatisfactoryPing/Rendering");
     private static final Identifier TEXTURE_ID = Identifier.of(MOD_ID, "textures/gui/location_ping.png");
+    private static final Identifier BORDER_TEXTURE = Identifier.of(MOD_ID, "textures/gui/ping_border.png");
     private static final double PING_RENDER_TIME = 5_000;
 
     private final SatisfactoryPingClient mod;
@@ -109,15 +112,66 @@ public class SatisfactoryPingRenderingHook {
         matrix.rotate((float)rotations.y, 0, 1, 0);
         matrix.rotate((float) rotations.x, 1, 0, 0);
 
-        Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
-
         float scale = 0.25f;
         final double distanceToCamera = diff.length();
         double apparentHeight = 2*Math.atan(scale/distanceToCamera);
         if (apparentHeight < smallestApparentHeight)
             scale = (float) (distanceToCamera*scalingFactor);
-        // Write our vertices, Z doesn't really matter since it's on the HUD.
+
+        renderHeadWithBorder(context, ping.cause(), matrix, scale);
+
+        if (!irisWorkaroundEnabled) renderText(context, ping, scale, distanceToCamera);
+    }
+
+    private void renderHeadWithBorder(WorldRenderContext context, UUID player, Matrix4f matrix, float scale) {
+        final var playerEntry = context.gameRenderer().getClient().getNetworkHandler().getPlayerListEntry(player);
+        var team = playerEntry.getScoreboardTeam();
+        // This is ridiculous
+        Integer c = team == null ? null : team.getColor().getColorValue();
+        int color = c == null ? -1 : c;
+
+
+        var buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
+        buffer.vertex(matrix, -scale, -scale, 0).texture(0, 1);
+        buffer.vertex(matrix, scale, -scale, 0).texture(1, 1);
+        buffer.vertex(matrix, scale, scale, 0).texture(1, 0);
+        buffer.vertex(matrix, -scale, scale, 0).texture(0, 0);
+
+        RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX);
+        RenderSystem.setShaderTexture(0, BORDER_TEXTURE);
+        RenderSystem.setShaderColor(
+                ((color >> 16) & 0xff) / 255f,
+                ((color >> 8) & 0xff) / 255f,
+                (color & 0xff) / 255f,
+                (color >> 24) / 255f
+        );
+
+        BufferRenderer.drawWithGlobalProgram(buffer.end());
+
+        renderHead(context, playerEntry, matrix, scale-1/16f);
+    }
+
+    private void renderHead(WorldRenderContext context, PlayerListEntry player, Matrix4f matrix, float scale) {
+        var texture = player.getSkinTextures().texture();
+
+        var buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
+        buffer.vertex(matrix, -scale, -scale, 0).texture(8/64f, 16/64f);
+        buffer.vertex(matrix, scale, -scale, 0).texture(16/64f, 16/64f);
+        buffer.vertex(matrix, scale, scale, 0).texture(16/64f, 8/64f);
+        buffer.vertex(matrix, -scale, scale, 0).texture(8/64f, 8/64f);
+
+        // Make sure the correct shader for your chosen vertex format is set!
+        // I did! (It took 2 hours of debugging, but I did!)
+        // You can find all the shaders in the ShaderProgramKeys class.
+        RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX);
+        RenderSystem.setShaderTexture(0, texture);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+
+        BufferRenderer.drawWithGlobalProgram(buffer.end());
+    }
+
+    private void renderIcon(WorldRenderContext context, UUID player, Matrix4f matrix, float scale) {
+        var buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
         buffer.vertex(matrix, -scale, -scale, 0).texture(0, 1);
         buffer.vertex(matrix, scale, -scale, 0).texture(1, 1);
         buffer.vertex(matrix, scale, scale, 0).texture(1, 0);
@@ -132,8 +186,6 @@ public class SatisfactoryPingRenderingHook {
 
         // Draw the buffer onto the screen.
         BufferRenderer.drawWithGlobalProgram(buffer.end());
-
-        if (!irisWorkaroundEnabled) renderText(context, ping, scale, distanceToCamera);
     }
 
     private void renderText(WorldRenderContext context, BlockPingPayload ping, double scale, double distanceToCamera) {
