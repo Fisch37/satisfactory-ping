@@ -35,6 +35,7 @@ repositories {
         name = "Terraformers"
         url = "https://maven.terraformersmc.com"
     }
+    mavenLocal()
 }
 
 dependencies {
@@ -46,6 +47,7 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation "com.terraformersmc:modmenu:${project.modmenu_version}"
     include(implementation "de.maxhenkel.configbuilder:configbuilder:${project.config_version}")
+    modCompileOnly "de.fisch37:moresocials:${project.moresocials_version}"
 }
 
 processResources {
@@ -58,7 +60,8 @@ processResources {
         expand "version": project.version,
                 "minecraft_version": project.minecraft_version,
                 "loader_version": project.loader_version,
-                "modmenu_version": project.modmenu_version
+                "modmenu_version": project.modmenu_version,
+                "moresocials_version": project.moresocials_version
     }
 }
 

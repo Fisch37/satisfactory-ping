@@ -18,6 +18,9 @@
     ],
     "modmenu": [
       "de.fisch37.satisfactory_ping.client.config.ModMenuEntrypoint"
+    ],
+    "moresocials": [
+      "de.fisch37.satisfactory_ping.client.socials.MoreSocialsEntrypoint"
     ]
   },
   "mixins": [
@@ -29,5 +32,8 @@
   },
   "suggests": {
     "modmenu": ">=${modmenu_version}"
+  },
+  "recommends": {
+    "moresocials": ">=${moresocials_version}"
   }
 }

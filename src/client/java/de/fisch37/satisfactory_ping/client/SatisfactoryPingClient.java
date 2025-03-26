@@ -1,5 +1,10 @@
 package de.fisch37.satisfactory_ping.client;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonIOException;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.reflect.TypeToken;
 import de.fisch37.satisfactory_ping.client.config.Config;
 import de.fisch37.satisfactory_ping.packets.BlockPingPayload;
 import de.maxhenkel.configbuilder.ConfigBuilder;
@@ -17,8 +22,15 @@ import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.*;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static de.fisch37.satisfactory_ping.SatisfactoryPing.MOD_ID;
 
@@ -30,14 +42,22 @@ public class SatisfactoryPingClient implements ClientModInitializer {
     ));
     public static final Logger LOGGER = LoggerFactory.getLogger("SatisfactoryPing/Client");
     public static final double MAX_CAST_DISTANCE = 512;
+    public static final Path CONFIG_PATH = Paths.get(".", "config", MOD_ID);
+    private static final Gson GSON = new GsonBuilder()
+            .setPrettyPrinting()
+            .create();
+    private static final ExecutorService SAVE_EXECUTOR = Executors.newSingleThreadExecutor();
+
     private static SatisfactoryPingRenderingHook rendering;
     private static Config config;
+    private static Set<UUID> disabledCauses;
 
     private boolean triggerState = false;
 
     @Override
     public void onInitializeClient() {
         config = loadConfig();
+        disabledCauses = loadDisabledCauses();
 
         SatisfactoryPingSound.initialize();
         rendering = new SatisfactoryPingRenderingHook(this);
@@ -54,6 +74,7 @@ public class SatisfactoryPingClient implements ClientModInitializer {
         });
         ClientPlayNetworking.registerGlobalReceiver(BlockPingPayload.ID, (payload, context) -> {
             if (payload.dimension().equals(context.player().clientWorld.getRegistryKey())) {
+                if (disabledCauses.contains(payload.cause())) return;
                 // Yk this looks really bad, but if you look into the decomp,
                 // you'll find this is exactly how the wither spawn sound is handled (but they use 2 instead of 5)
                 var soundOrigin = payload.pos().subtract(context.player().getPos()).normalize().multiply(5);
@@ -75,6 +96,22 @@ public class SatisfactoryPingClient implements ClientModInitializer {
         return config;
     }
 
+    public static Set<UUID> getDisabledCauses() {
+        return disabledCauses;
+    }
+
+    public static void scheduleDisabledCausesSave() {
+        SAVE_EXECUTOR.execute(SatisfactoryPingClient::saveDisabledCauses);
+    }
+
+    private static void saveDisabledCauses() {
+        try (var writer = new FileWriter(DISABLED_CAUSES_FILE)) {
+            GSON.toJson(disabledCauses, writer);
+        } catch (IOException|JsonIOException e) {
+            LOGGER.error("Failed to write to disabled causes file: I/O error");
+        }
+    }
+
     public void sendPing(MinecraftClient client) {
         if (client.player == null) return;
         var result = client.player.raycast(MAX_CAST_DISTANCE, 1.0f, false);
@@ -89,7 +126,7 @@ public class SatisfactoryPingClient implements ClientModInitializer {
     }
 
     private Config loadConfig() {
-        var path = Paths.get(".", "config", MOD_ID+".properties").toAbsolutePath();
+        var path = CONFIG_PATH.resolve("config.properties").toAbsolutePath();
         var dir = path.getParent().toFile();
         boolean createdSuccessfully;
         try {
@@ -101,6 +138,22 @@ public class SatisfactoryPingClient implements ClientModInitializer {
                 .path(path)
                 .saveSyncAfterBuild(createdSuccessfully)
                 .build();
+    }
+
+    private static final File DISABLED_CAUSES_FILE = CONFIG_PATH.resolve("disabled_causes.json").toFile();
+    private static final TypeToken<Set<UUID>> SET_OF_UUIDS_TOKEN = new TypeToken<>() { };
+    private static Set<UUID> loadDisabledCauses() {
+        try (var reader = new FileReader(DISABLED_CAUSES_FILE)) {
+            return GSON.fromJson(reader, SET_OF_UUIDS_TOKEN);
+        } catch (FileNotFoundException e) {
+            return new HashSet<>();
+        } catch (IOException|JsonIOException e) {
+            LOGGER.error("I/O error while reading disabled causes file. Using default instead");
+            return new HashSet<>();
+        } catch (JsonSyntaxException e) {
+            LOGGER.error("disabled_causes.json is not a valid json file. Using default");
+            return new HashSet<>();
+        }
     }
 
     private void irisWorkaround(MinecraftClient client) {

@@ -32,7 +32,7 @@ public class DoubleSliderWidget extends SliderWidget {
 
     @Override
     protected void updateMessage() {
-        setMessage(updateFunction.apply(Math.round(10* getRealValue())/10d));
+        setMessage(updateFunction.apply(getRealValue()));
     }
 
     @Override
@@ -41,6 +41,6 @@ public class DoubleSliderWidget extends SliderWidget {
     }
 
     public double getRealValue() {
-        return this.value * (max-min) + min;
+        return Math.round(10*(this.value * (max-min) + min))/10d;
     }
 }
