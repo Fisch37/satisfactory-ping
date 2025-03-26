@@ -124,11 +124,22 @@ public class SatisfactoryPingRenderingHook {
     }
 
     private void renderHeadWithBorder(WorldRenderContext context, UUID player, Matrix4f matrix, float scale) {
-        final var playerEntry = context.gameRenderer().getClient().getNetworkHandler().getPlayerListEntry(player);
+        int color;
+        // It's good that this is a personal project, because I feel like if I did this at a job, I'd get fired
+        final var networkHandler = context.gameRenderer().getClient().getNetworkHandler();
+        if (networkHandler == null) {
+            LOGGER.error("Network handler not available, cannot get player skin");
+            return;
+        }
+        final var playerEntry = networkHandler.getPlayerListEntry(player);
+        if (playerEntry == null) {
+            LOGGER.error("Cannot find player entry for {}, cannot get player skin", player.toString());
+            return;
+        }
         var team = playerEntry.getScoreboardTeam();
         // This is ridiculous
         Integer c = team == null ? null : team.getColor().getColorValue();
-        int color = c == null ? -1 : c;
+        color = c == null ? -1 : c;
 
 
         var buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
