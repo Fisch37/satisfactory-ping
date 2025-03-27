@@ -1,6 +1,6 @@
 package de.fisch37.satisfactory_ping.client.socials;
 
-import de.fisch37.moresocialinteractions.api.MenuRegistry;
+import de.fisch37.moresocialinteractions.api.MoreSocialsAPI;
 import de.fisch37.moresocialinteractions.api.MoreSocialsInitializer;
 import de.fisch37.satisfactory_ping.client.socials.widgets.ToggleableButtonTextures;
 import de.fisch37.satisfactory_ping.client.socials.widgets.ToggleableTexturedButtonWidget;
@@ -17,7 +17,7 @@ public class MoreSocialsEntrypoint implements MoreSocialsInitializer {
     );
 
     @Override
-    public void onMoreSocialsInitialized(MenuRegistry registry) {
+    public void onMoreSocialsInitialized(MoreSocialsAPI registry) {
         registry.registerButton(entry ->
             new ToggleableTexturedButtonWidget(20, 20, PING_EN_TEXTURES, b -> {
                 if (b.getState())
