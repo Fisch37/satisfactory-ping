@@ -159,7 +159,7 @@ public class SatisfactoryPingRenderingHook {
 
         BufferRenderer.drawWithGlobalProgram(buffer.end());
 
-        renderHead(context, playerEntry, matrix, scale-1/16f);
+        renderHead(context, playerEntry, matrix, scale*(12/16f));
     }
 
     private void renderHead(WorldRenderContext context, PlayerListEntry player, Matrix4f matrix, float scale) {
