@@ -65,12 +65,16 @@ public class SatisfactoryPingClient implements ClientModInitializer {
         rendering.setApparentTextSize(config.textHeight.get());
 
         ClientLifecycleEvents.CLIENT_STARTED.register(this::irisWorkaround);
-        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+        ClientTickEvents.START_CLIENT_TICK.register(client -> {
             final var useKey = Objects.requireNonNull(KeyBinding.byId("key.use"));
             boolean lastTriggerState = triggerState;
-            triggerState = PING_KEYBIND.isPressed() && useKey.isPressed();
-           if (!lastTriggerState && triggerState)
-               sendPing(client);
+            triggerState = PING_KEYBIND.isPressed() && useKey.wasPressed();
+            if (!lastTriggerState && triggerState)
+                sendPing(client);
+            // Prevent placing blocks when the key combo was triggered. This is a bit of a hack tbh
+            //noinspection StatementWithEmptyBody
+            while(triggerState && useKey.wasPressed()) { }
+            if (triggerState) useKey.setPressed(false);
         });
         ClientPlayNetworking.registerGlobalReceiver(BlockPingPayload.ID, (payload, context) -> {
             if (payload.dimension().equals(context.player().clientWorld.getRegistryKey())) {
