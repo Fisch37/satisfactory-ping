@@ -81,7 +81,7 @@ public class SatisfactoryPingClient implements ClientModInitializer {
                 context.player().clientWorld.playSound(
                         soundOrigin.x, soundOrigin.y, soundOrigin.z,
                         SatisfactoryPingSound.PING_SOUND_EVENT, SoundCategory.PLAYERS,
-                        1.0F, 1.0F, false
+                        0.25F, 1.0F, false
                 );
                 rendering.add(payload);
             }
