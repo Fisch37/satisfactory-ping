@@ -82,7 +82,7 @@ public class SatisfactoryPingClient implements ClientModInitializer {
                 // Yk this looks really bad, but if you look into the decomp,
                 // you'll find this is exactly how the wither spawn sound is handled (but they use 2 instead of 5)
                 var soundOrigin = payload.pos().subtract(context.player().getPos()).normalize().multiply(5);
-                context.player().clientWorld.playSound(
+                context.player().clientWorld.playSoundClient(
                         soundOrigin.x, soundOrigin.y, soundOrigin.z,
                         SatisfactoryPingSound.PING_SOUND_EVENT, SoundCategory.PLAYERS,
                         0.25F, 1.0F, false
