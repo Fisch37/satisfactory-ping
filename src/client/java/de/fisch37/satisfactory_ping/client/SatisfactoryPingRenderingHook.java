@@ -1,26 +1,16 @@
 package de.fisch37.satisfactory_ping.client;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.fisch37.satisfactory_ping.client.config.Config;
 import de.fisch37.satisfactory_ping.client.rendering.InWorldRendering;
 import de.fisch37.satisfactory_ping.client.rendering.RenderingConfig;
 import de.fisch37.satisfactory_ping.packets.BlockPingPayload;
 import net.fabricmc.fabric.api.client.rendering.v1.*;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gl.ShaderProgramKeys;
-import net.minecraft.client.network.PlayerListEntry;
-import net.minecraft.client.render.*;
-import net.minecraft.util.Colors;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.util.Util;
-import net.minecraft.util.math.Vec3d;
-import org.joml.Matrix4f;
-import org.joml.Vector3f;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static de.fisch37.satisfactory_ping.SatisfactoryPing.MOD_ID;

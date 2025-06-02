@@ -122,6 +122,8 @@ public class InWorldRendering {
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
         BufferRenderer.drawWithGlobalProgram(buffer.end());
+
+        try (var renderPass = RenderSystem.getDevice().createCommandEncoder().crea)
     }
 
 
