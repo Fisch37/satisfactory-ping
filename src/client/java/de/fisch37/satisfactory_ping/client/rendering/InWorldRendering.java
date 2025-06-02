@@ -1,16 +1,12 @@
 package de.fisch37.satisfactory_ping.client.rendering;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.fisch37.satisfactory_ping.packets.BlockPingPayload;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gl.ShaderProgramKeys;
 import net.minecraft.client.network.PlayerListEntry;
-import net.minecraft.client.render.BufferRenderer;
-import net.minecraft.client.render.Tessellator;
-import net.minecraft.client.render.VertexFormat;
-import net.minecraft.client.render.VertexFormats;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.util.Colors;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3d;
 import org.joml.Matrix4f;
 
@@ -21,6 +17,17 @@ import static de.fisch37.satisfactory_ping.client.rendering.Utilities.lookAtRota
 import static de.fisch37.satisfactory_ping.client.SatisfactoryPingRenderingHook.LOGGER;
 
 public class InWorldRendering {
+    private static RenderLayer getRenderLayer(Identifier texture) {
+        /*
+         * I'm using the GUI_TEXTURED render layer here because it fulfills three important properties:
+         * 1. It has the POSITION_TEXTURE_COLOR vertex format.
+         * 2. It has the QUADS draw mode.
+         * 3. It allows passing a texture.
+         *
+         */
+        return RenderLayer.getGuiTextured(texture);
+    }
+
     private final RenderingConfig config;
 
     public InWorldRendering(RenderingConfig config) {
@@ -84,46 +91,27 @@ public class InWorldRendering {
         Integer c = team == null ? null : team.getColor().getColorValue();
         color = c == null ? -1 : c;
 
-
-        var buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
-        buffer.vertex(matrix, -scale, -scale, 0).texture(0, 1);
-        buffer.vertex(matrix, scale, -scale, 0).texture(1, 1);
-        buffer.vertex(matrix, scale, scale, 0).texture(1, 0);
-        buffer.vertex(matrix, -scale, scale, 0).texture(0, 0);
-
-        RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX);
-        RenderSystem.setShaderTexture(0, BORDER_TEXTURE);
-        RenderSystem.setShaderColor(
-                ((color >> 16) & 0xff) / 255f,
-                ((color >> 8) & 0xff) / 255f,
-                (color & 0xff) / 255f,
-                (color >> 24) / 255f
-        );
-
-        BufferRenderer.drawWithGlobalProgram(buffer.end());
+        var consumers = context.consumers();
+        assert consumers != null;
+        var vertexConsumer = consumers.getBuffer(getRenderLayer(BORDER_TEXTURE));
+        vertexConsumer.vertex(matrix, -scale, -scale, 0).texture(0, 1).color(color);
+        vertexConsumer.vertex(matrix, scale, -scale, 0).texture(1, 1).color(color);
+        vertexConsumer.vertex(matrix, scale, scale, 0).texture(1, 0).color(color);
+        vertexConsumer.vertex(matrix, -scale, scale, 0).texture(0, 0).color(color);
 
         renderHead(context, playerEntry, matrix, scale*(12/16f));
     }
 
     private void renderHead(WorldRenderContext context, PlayerListEntry player, Matrix4f matrix, float scale) {
         var texture = player.getSkinTextures().texture();
+        var consumers = context.consumers();
+        assert consumers != null;
+        var vertexConsumer = consumers.getBuffer(getRenderLayer(texture));
 
-        var buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
-        buffer.vertex(matrix, -scale, -scale, 0).texture(8/64f, 16/64f);
-        buffer.vertex(matrix, scale, -scale, 0).texture(16/64f, 16/64f);
-        buffer.vertex(matrix, scale, scale, 0).texture(16/64f, 8/64f);
-        buffer.vertex(matrix, -scale, scale, 0).texture(8/64f, 8/64f);
-
-        // Make sure the correct shader for your chosen vertex format is set!
-        // I did! (It took 2 hours of debugging, but I did!)
-        // You can find all the shaders in the ShaderProgramKeys class.
-        RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX);
-        RenderSystem.setShaderTexture(0, texture);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-
-        BufferRenderer.drawWithGlobalProgram(buffer.end());
-
-        try (var renderPass = RenderSystem.getDevice().createCommandEncoder().crea)
+        vertexConsumer.vertex(matrix, -scale, -scale, 0).texture(8/64f, 16/64f).color(-1);
+        vertexConsumer.vertex(matrix, scale, -scale, 0).texture(16/64f, 16/64f).color(-1);
+        vertexConsumer.vertex(matrix, scale, scale, 0).texture(16/64f, 8/64f).color(-1);
+        vertexConsumer.vertex(matrix, -scale, scale, 0).texture(8/64f, 8/64f).color(-1);
     }
 
 
