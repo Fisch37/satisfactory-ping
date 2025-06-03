@@ -1,12 +1,18 @@
 package de.fisch37.satisfactory_ping.client.rendering;
 
+import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.blaze3d.platform.DepthTestFunction;
+import de.fisch37.satisfactory_ping.SatisfactoryPing;
 import de.fisch37.satisfactory_ping.packets.BlockPingPayload;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.render.RenderPhase;
 import net.minecraft.util.Colors;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.TriState;
 import net.minecraft.util.math.Vec3d;
 import org.joml.Matrix4f;
 
@@ -17,15 +23,17 @@ import static de.fisch37.satisfactory_ping.client.rendering.Utilities.lookAtRota
 import static de.fisch37.satisfactory_ping.client.SatisfactoryPingRenderingHook.LOGGER;
 
 public class InWorldRendering {
+    private static final RenderPipeline PIPELINE = RenderPipelines.register(
+            RenderPipeline.builder(RenderPipelines.POSITION_TEX_COLOR_SNIPPET)
+                    .withLocation(Identifier.of(SatisfactoryPing.MOD_ID, "pipeline/ping"))
+                    .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+            .build());
     private static RenderLayer getRenderLayer(Identifier texture) {
-        /*
-         * I'm using the GUI_TEXTURED render layer here because it fulfills three important properties:
-         * 1. It has the POSITION_TEXTURE_COLOR vertex format.
-         * 2. It has the QUADS draw mode.
-         * 3. It allows passing a texture.
-         *
-         */
-        return RenderLayer.getGuiTextured(texture);
+        // why is size this big? no clue! I copied most of this from RenderLayers.GUI_TEXTURED
+        return RenderLayer.of("ping", 786432, PIPELINE,
+                RenderLayer.MultiPhaseParameters.builder()
+                        .texture(new RenderPhase.Texture(texture, TriState.FALSE, false))
+                        .build(false));
     }
 
     private final RenderingConfig config;
