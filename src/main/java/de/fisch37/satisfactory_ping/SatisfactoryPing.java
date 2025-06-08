@@ -2,6 +2,7 @@ package de.fisch37.satisfactory_ping;
 
 import de.fisch37.satisfactory_ping.packets.BlockPingPayload;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.util.Identifier;
@@ -12,6 +13,7 @@ public class SatisfactoryPing implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        CommandRegistrationCallback.EVENT.register(PingCommand::register);
         PayloadTypeRegistry.playC2S().register(BlockPingPayload.ID, BlockPingPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(BlockPingPayload.ID, BlockPingPayload.CODEC);
 
