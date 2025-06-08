@@ -16,11 +16,11 @@ import org.joml.Matrix4f;
 
 import java.util.UUID;
 
-import static de.fisch37.satisfactory_ping.client.SatisfactoryPingRenderingHook.BORDER_TEXTURE;
+import static de.fisch37.satisfactory_ping.client.SatisfactoryPingRenderingHook.*;
 import static de.fisch37.satisfactory_ping.client.rendering.Utilities.lookAtRotations;
-import static de.fisch37.satisfactory_ping.client.SatisfactoryPingRenderingHook.LOGGER;
 
 public class InWorldRendering {
+    public static final float MIN_SCALE = 0.25f;
     private final RenderingConfig config;
 
     public InWorldRendering(RenderingConfig config) {
@@ -50,13 +50,19 @@ public class InWorldRendering {
         matrix.rotate((float)rotations.y(), 0, 1, 0);
         matrix.rotate((float) rotations.x(), 1, 0, 0);
 
-        float scale = 0.25f;
         final double distanceToCamera = diff.length();
-        double apparentHeight = 2*Math.atan(scale/distanceToCamera);
-        if (apparentHeight < config.getSmallestApparentHeight())
-            scale = (float) (distanceToCamera*config.getScalingFactor());
+        double apparentHeight = 2*Math.atan(MIN_SCALE/distanceToCamera);
+        float scale;
+        if (apparentHeight < config.getSmallestApparentHeight()) {
+            scale = (float) (distanceToCamera * config.getScalingFactor());
+        } else {
+            scale = MIN_SCALE;
+        }
 
-        renderHeadWithBorder(context, ping.cause(), matrix, scale);
+        ping.cause().ifPresentOrElse(
+                cause -> renderHeadWithBorder(context, cause, matrix, scale),
+                () -> renderTexture(context, matrix, scale)
+        );
 
         if (!config.isIrisWorkaroundEnabled()) renderText(context, ping, scale, distanceToCamera);
     }
@@ -64,6 +70,18 @@ public class InWorldRendering {
     private void renderText(WorldRenderContext context, BlockPingPayload ping, double scale, double distanceToCamera) {
         final var fontHeight = 2*distanceToCamera*config.getTextScalingFactor();
         textHelper(context, ping.pos().subtract(0, scale+fontHeight, 0), (long)distanceToCamera + "m", (float)fontHeight);
+    }
+
+    private void renderTexture(WorldRenderContext context, Matrix4f matrix, float scale) {
+        var buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
+        buffer.vertex(matrix, -scale, -scale, 0).texture(0, 1);
+        buffer.vertex(matrix, scale, -scale, 0).texture(1, 1);
+        buffer.vertex(matrix, scale, scale, 0).texture(1, 0);
+        buffer.vertex(matrix, -scale, scale, 0).texture(0, 0);
+
+        RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX);
+        RenderSystem.setShaderTexture(0, TEXTURE_ID);
+        BufferRenderer.drawWithGlobalProgram(buffer.end());
     }
 
     private void renderHeadWithBorder(WorldRenderContext context, UUID player, Matrix4f matrix, float scale) {

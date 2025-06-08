@@ -25,10 +25,7 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -125,7 +122,7 @@ public class SatisfactoryPingClient implements ClientModInitializer {
         // client.player.sendMessage(Text.literal("Press! " + pos.x + " " + pos.y + " " + pos.z), false);
         ClientPlayNetworking.send(new BlockPingPayload(
                 client.player.clientWorld.getRegistryKey(),
-                pos, client.player.getUuid())
+                pos, Optional.of(client.player.getUuid()))
         );
     }
 
