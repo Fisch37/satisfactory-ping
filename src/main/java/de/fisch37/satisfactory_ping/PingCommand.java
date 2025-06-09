@@ -29,7 +29,7 @@ public class PingCommand {
         return Vec3ArgumentType.getPosArgument(context, "pos").getPos(context.getSource());
     }
 
-    private static final LiteralArgumentBuilder<ServerCommandSource> COMMAND = literal("ping")
+    private static final LiteralArgumentBuilder<ServerCommandSource> COMMAND = literal("satisfactory-ping")
         .requires(source -> source.hasPermissionLevel(2))
         .then(argument("targets", EntityArgumentType.players())
                 .executes(context -> execute(context,
