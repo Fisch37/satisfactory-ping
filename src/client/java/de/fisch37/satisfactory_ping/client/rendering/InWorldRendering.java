@@ -12,7 +12,6 @@ import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.RenderPhase;
 import net.minecraft.util.Colors;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.TriState;
 import net.minecraft.util.math.Vec3d;
 import org.joml.Matrix4f;
 
@@ -32,7 +31,7 @@ public class InWorldRendering {
         // why is size this big? no clue! I copied most of this from RenderLayers.GUI_TEXTURED
         return RenderLayer.of("ping", 786432, PIPELINE,
                 RenderLayer.MultiPhaseParameters.builder()
-                        .texture(new RenderPhase.Texture(texture, TriState.FALSE, false))
+                        .texture(new RenderPhase.Texture(texture, false))
                         .build(false));
     }
 

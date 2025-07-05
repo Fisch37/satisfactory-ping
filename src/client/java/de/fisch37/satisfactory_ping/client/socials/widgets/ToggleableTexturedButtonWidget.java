@@ -1,5 +1,6 @@
 package de.fisch37.satisfactory_ping.client.socials.widgets;
 
+import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.render.RenderLayer;
@@ -43,7 +44,7 @@ public class ToggleableTexturedButtonWidget extends ButtonWidget {
     @Override
     public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
         context.drawGuiTexture(
-                RenderLayer::getGuiTextured, textures.get(getState(), isHovered()),
+                RenderPipelines.GUI_TEXTURED, textures.get(getState(), isHovered()),
                 getX(), getY(), width, height
         );
     }
