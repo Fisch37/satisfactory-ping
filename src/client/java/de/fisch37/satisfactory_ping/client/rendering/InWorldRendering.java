@@ -126,15 +126,15 @@ public class InWorldRendering {
     }
 
     private void renderHead(WorldRenderContext context, PlayerListEntry player, Matrix4f matrix, float scale) {
-        var texture = player.getSkinTextures().body().id();
+        var texture = player.getSkinTextures().body().texturePath();
         var consumers = context.consumers();
         assert consumers != null;
         var vertexConsumer = consumers.getBuffer(getRenderLayer(texture));
 
-        vertexConsumer.vertex(matrix, -scale, -scale, 0).texture(8/64f, 16/64f).color(-1);
-        vertexConsumer.vertex(matrix, scale, -scale, 0).texture(16/64f, 16/64f).color(-1);
-        vertexConsumer.vertex(matrix, scale, scale, 0).texture(16/64f, 8/64f).color(-1);
-        vertexConsumer.vertex(matrix, -scale, scale, 0).texture(8/64f, 8/64f).color(-1);
+        vertexConsumer.vertex(matrix, -scale, -scale, 0).texture(8/64f, 16/64f).color(Colors.WHITE);
+        vertexConsumer.vertex(matrix, scale, -scale, 0).texture(16/64f, 16/64f).color(Colors.WHITE);
+        vertexConsumer.vertex(matrix, scale, scale, 0).texture(16/64f, 8/64f).color(Colors.WHITE);
+        vertexConsumer.vertex(matrix, -scale, scale, 0).texture(8/64f, 8/64f).color(Colors.WHITE);
     }
 
 
