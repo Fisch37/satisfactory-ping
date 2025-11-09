@@ -59,12 +59,13 @@ public class SingleEntryElementList extends ElementListWidget<SingleEntryElement
          * @param tickDelta
          */
         @Override
-        public void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-            element.setX(x);
-            element.setY(y);
-            element.setWidth(entryWidth);
-            element.setHeight(entryHeight);
-            element.render(context,mouseX, mouseY, tickDelta);
+        public void render(DrawContext context, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
+            throw new RuntimeException("Not implemented");
+//            element.setX(x);
+//            element.setY(y);
+//            element.setWidth(entryWidth);
+//            element.setHeight(entryHeight);
+//            element.render(context,mouseX, mouseY, tickDelta);
         }
     }
 }

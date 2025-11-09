@@ -4,7 +4,7 @@ import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.DepthTestFunction;
 import de.fisch37.satisfactory_ping.SatisfactoryPing;
 import de.fisch37.satisfactory_ping.packets.BlockPingPayload;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
+import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.network.PlayerListEntry;
@@ -42,7 +42,7 @@ public class InWorldRendering {
     }
 
     public void renderIrisWorkaround(WorldRenderContext context, BlockPingPayload ping) {
-        var diff = context.camera().getPos().subtract(ping.pos());
+        Vec3d diff = getCameraPos(context).subtract(ping.pos());
         float scale = 0.25f;
         final double distanceToCamera = diff.length();
         double apparentHeight = 2*Math.atan(scale/distanceToCamera);
@@ -54,7 +54,7 @@ public class InWorldRendering {
     public void renderPing(WorldRenderContext context, BlockPingPayload ping) {
         // Running BEFORE_ENTITIES: matrixStack == null
         Matrix4f matrix = new Matrix4f();
-        var camPos = context.camera().getPos();
+        Vec3d camPos = getCameraPos(context);
         var pos = ping.pos();
         var diff = camPos.subtract(pos);
         matrix.translate(-(float)camPos.x, -(float)camPos.y, -(float)camPos.z);
@@ -126,7 +126,7 @@ public class InWorldRendering {
     }
 
     private void renderHead(WorldRenderContext context, PlayerListEntry player, Matrix4f matrix, float scale) {
-        var texture = player.getSkinTextures().texture();
+        var texture = player.getSkinTextures().body().id();
         var consumers = context.consumers();
         assert consumers != null;
         var vertexConsumer = consumers.getBuffer(getRenderLayer(texture));
@@ -142,7 +142,7 @@ public class InWorldRendering {
         final var textRenderer = context.gameRenderer().getClient().textRenderer;
         final var scale = height/textRenderer.fontHeight;
         var matrix = new Matrix4f();
-        final var diff = bottomCentre.subtract(context.camera().getPos()).toVector3f();
+        final var diff = bottomCentre.subtract(getCameraPos(context)).toVector3f();
         matrix.translate(diff);
         matrix.translate(0, height, 0);
         matrix.rotate((float)Math.PI, 0, 0, 1);  // For some reason text is rendered upside-down
@@ -164,5 +164,9 @@ public class InWorldRendering {
                 TextRenderer.TextLayerType.SEE_THROUGH,
                 0, 255
         );
+    }
+
+    private static Vec3d getCameraPos(WorldRenderContext context) {
+        return context.worldState().cameraRenderState.pos;
     }
 }

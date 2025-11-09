@@ -35,7 +35,7 @@ public class SatisfactoryPingClient implements ClientModInitializer {
     public static final KeyBinding PING_KEYBIND = KeyBindingHelper.registerKeyBinding(new KeyBinding(
             "key.satisfactory_ping.ping",
             GLFW.GLFW_KEY_LEFT_ALT,
-            KeyBinding.MISC_CATEGORY
+            KeyBinding.Category.MISC
     ));
     public static final Logger LOGGER = LoggerFactory.getLogger("SatisfactoryPing/Client");
     public static final double MAX_CAST_DISTANCE = 512;
@@ -74,12 +74,12 @@ public class SatisfactoryPingClient implements ClientModInitializer {
             if (triggerState) useKey.setPressed(false);
         });
         ClientPlayNetworking.registerGlobalReceiver(BlockPingPayload.ID, (payload, context) -> {
-            if (payload.dimension().equals(context.player().clientWorld.getRegistryKey())) {
-                if (disabledCauses.contains(payload.cause())) return;
+            if (payload.dimension().equals(context.player().getEntityWorld().getRegistryKey())) {
+                if (disabledCauses.contains(payload.cause().orElse(null))) return;
                 // Yk this looks really bad, but if you look into the decomp,
                 // you'll find this is exactly how the wither spawn sound is handled (but they use 2 instead of 5)
-                var soundOrigin = payload.pos().subtract(context.player().getPos()).normalize().multiply(5);
-                context.player().clientWorld.playSoundClient(
+                var soundOrigin = payload.pos().subtract(context.player().getEyePos()).normalize().multiply(5);
+                context.player().getEntityWorld().playSoundClient(
                         soundOrigin.x, soundOrigin.y, soundOrigin.z,
                         SatisfactoryPingSound.PING_SOUND_EVENT, SoundCategory.PLAYERS,
                         0.25F, 1.0F, false
@@ -121,7 +121,7 @@ public class SatisfactoryPingClient implements ClientModInitializer {
         var pos = result.getPos();
         // client.player.sendMessage(Text.literal("Press! " + pos.x + " " + pos.y + " " + pos.z), false);
         ClientPlayNetworking.send(new BlockPingPayload(
-                client.player.clientWorld.getRegistryKey(),
+                client.player.getEntityWorld().getRegistryKey(),
                 pos, Optional.of(client.player.getUuid()))
         );
     }

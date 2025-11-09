@@ -4,7 +4,8 @@ import de.fisch37.satisfactory_ping.client.config.Config;
 import de.fisch37.satisfactory_ping.client.rendering.InWorldRendering;
 import de.fisch37.satisfactory_ping.client.rendering.RenderingConfig;
 import de.fisch37.satisfactory_ping.packets.BlockPingPayload;
-import net.fabricmc.fabric.api.client.rendering.v1.*;
+import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
+import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.util.Util;
@@ -30,7 +31,7 @@ public class SatisfactoryPingRenderingHook {
         this.mod = mod;
         config = new RenderingConfig();
         inWorld = new InWorldRendering(config);
-        WorldRenderEvents.LAST.register(this::renderSequence);
+        WorldRenderEvents.END_MAIN.register(this::renderSequence);
         setMinimumHeight(Config.DEFAULT_ICON_HEIGHT);
         setApparentTextSize(Config.DEFAULT_TEXT_HEIGHT);
     }

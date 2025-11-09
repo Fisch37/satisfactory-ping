@@ -3,13 +3,13 @@ package de.fisch37.satisfactory_ping.client.socials.widgets;
 import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.input.AbstractInput;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.screen.ScreenTexts;
 
 public class ToggleableTexturedButtonWidget extends ButtonWidget {
     private final ToggleableButtonTextures textures;
     private boolean state;
-    private final ToggleableButtonPressAction onPress;
 
     public ToggleableTexturedButtonWidget(
             int width, int height, ToggleableButtonTextures textures, ToggleableButtonPressAction onPress
@@ -22,7 +22,6 @@ public class ToggleableTexturedButtonWidget extends ButtonWidget {
             ToggleableButtonTextures textures, ToggleableButtonPressAction onPress
     ) {
         super(x, y, width, height, ScreenTexts.EMPTY, b -> { }, DEFAULT_NARRATION_SUPPLIER);
-        this.onPress = onPress;
         this.textures = textures;
     }
 
@@ -36,9 +35,9 @@ public class ToggleableTexturedButtonWidget extends ButtonWidget {
     }
 
     @Override
-    public void onPress() {
+    public void onPress(AbstractInput input) {
         state = !state;
-        this.onPress.onPress(this);
+        super.onPress(input);
     }
 
     @Override
