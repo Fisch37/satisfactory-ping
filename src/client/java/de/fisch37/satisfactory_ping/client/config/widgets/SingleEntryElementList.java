@@ -46,26 +46,12 @@ public class SingleEntryElementList extends ElementListWidget<SingleEntryElement
 
         /**
          * Renders an entry in a list.
-         *
-         * @param context
-         * @param index       the index of the entry
-         * @param y           the Y coordinate of the entry
-         * @param x           the X coordinate of the entry
-         * @param entryWidth  the width of the entry
-         * @param entryHeight the height of the entry
-         * @param mouseX      the X coordinate of the mouse
-         * @param mouseY      the Y coordinate of the mouse
-         * @param hovered     whether the mouse is hovering over the entry
-         * @param tickDelta
          */
         @Override
         public void render(DrawContext context, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
-            throw new RuntimeException("Not implemented");
-//            element.setX(x);
-//            element.setY(y);
-//            element.setWidth(entryWidth);
-//            element.setHeight(entryHeight);
-//            element.render(context,mouseX, mouseY, tickDelta);
+            element.setX(getContentX());
+            element.setY(getContentY());
+            element.render(context,mouseX, mouseY, deltaTicks);
         }
     }
 }
