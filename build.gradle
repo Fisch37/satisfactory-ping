@@ -13,6 +13,7 @@ base {
 loom {
     splitEnvironmentSourceSets()
 
+    accessWidenerPath = file("src/main/resources/satisfactory_ping.accesswidener")
     mods {
         "satisfactory_ping" {
             sourceSet sourceSets.main

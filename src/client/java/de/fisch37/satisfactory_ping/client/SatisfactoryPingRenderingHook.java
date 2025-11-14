@@ -1,11 +1,16 @@
 package de.fisch37.satisfactory_ping.client;
 
 import de.fisch37.satisfactory_ping.client.config.Config;
+import de.fisch37.satisfactory_ping.client.rendering.HudRendering;
 import de.fisch37.satisfactory_ping.client.rendering.InWorldRendering;
 import de.fisch37.satisfactory_ping.client.rendering.RenderingConfig;
 import de.fisch37.satisfactory_ping.packets.BlockPingPayload;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.util.Util;
@@ -18,8 +23,9 @@ import static de.fisch37.satisfactory_ping.SatisfactoryPing.MOD_ID;
 
 public class SatisfactoryPingRenderingHook {
     public static final Logger LOGGER = LoggerFactory.getLogger("SatisfactoryPing/Rendering");
-    public static final Identifier TEXTURE_ID = Identifier.of(MOD_ID, "textures/gui/location_ping.png");
-    public static final Identifier BORDER_TEXTURE = Identifier.of(MOD_ID, "textures/gui/ping_border.png");
+    public static final Identifier PING_BAR = Identifier.of(MOD_ID, "ping_bar");
+    public static final Identifier TEXTURE_ID = Identifier.of(MOD_ID, "hud/location_ping");
+    public static final Identifier BORDER_TEXTURE = Identifier.of(MOD_ID, "hud/ping_border");
     private static final double PING_RENDER_TIME = 5_000;
 
     private final SatisfactoryPingClient mod;
@@ -32,6 +38,7 @@ public class SatisfactoryPingRenderingHook {
         config = new RenderingConfig();
         inWorld = new InWorldRendering(config);
         WorldRenderEvents.END_MAIN.register(this::renderSequence);
+        HudElementRegistry.attachElementAfter(VanillaHudElements.SUBTITLES, PING_BAR, this::renderPingBar);
         setMinimumHeight(Config.DEFAULT_ICON_HEIGHT);
         setApparentTextSize(Config.DEFAULT_TEXT_HEIGHT);
     }
@@ -80,5 +87,10 @@ public class SatisfactoryPingRenderingHook {
                 renderQueue.remove(item);
             }
         }
+    }
+
+    private void renderPingBar(DrawContext context, RenderTickCounter tickCounter) {
+        renderQueue.forEach(ping ->
+                HudRendering.renderPingOnBar(context, ping.getLeft(), tickCounter));
     }
 }

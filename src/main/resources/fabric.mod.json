@@ -9,6 +9,7 @@
   "license": "MIT",
   "icon": "assets/satisfactory_ping/icon.png",
   "environment": "*",
+  "accessWidener" : "satisfactory_ping.accesswidener",
   "entrypoints": {
     "client": [
       "de.fisch37.satisfactory_ping.client.SatisfactoryPingClient"
@@ -24,6 +25,7 @@
     ]
   },
   "mixins": [
+    "satisfactory_ping.client.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=${loader_version}",

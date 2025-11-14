@@ -89,7 +89,7 @@ public class InWorldRendering {
     private void renderTexture(WorldRenderContext context, Matrix4f matrix, float scale) {
         var consumers = context.consumers();
         assert consumers != null;
-        var vertexConsumer = consumers.getBuffer(getRenderLayer(TEXTURE_ID));
+        var vertexConsumer = consumers.getBuffer(getRenderLayer(Utilities.fromGuiTexture(TEXTURE_ID)));
         vertexConsumer.vertex(matrix, -scale, -scale, 0).texture(0, 1).color(-1);
         vertexConsumer.vertex(matrix, scale, -scale, 0).texture(1, 1).color(-1);
         vertexConsumer.vertex(matrix, scale, scale, 0).texture(1, 0).color(-1);
@@ -97,7 +97,6 @@ public class InWorldRendering {
     }
 
     private void renderHeadWithBorder(WorldRenderContext context, UUID player, Matrix4f matrix, float scale) {
-        int color;
         // It's good that this is a personal project, because I feel like if I did this at a job, I'd get fired
         final var networkHandler = context.gameRenderer().getClient().getNetworkHandler();
         if (networkHandler == null) {
@@ -109,14 +108,11 @@ public class InWorldRendering {
             LOGGER.error("Cannot find player entry for {}, cannot get player skin", player.toString());
             return;
         }
-        var team = playerEntry.getScoreboardTeam();
-        // This is ridiculous
-        Integer c = team == null ? null : team.getColor().getColorValue();
-        color = c == null ? -1 : c;
+        int color = Utilities.getPingDataFromEntry(playerEntry).color();
 
         var consumers = context.consumers();
         assert consumers != null;
-        var vertexConsumer = consumers.getBuffer(getRenderLayer(BORDER_TEXTURE));
+        var vertexConsumer = consumers.getBuffer(getRenderLayer(Utilities.fromGuiTexture(BORDER_TEXTURE)));
         vertexConsumer.vertex(matrix, -scale, -scale, 0).texture(0, 1).color(color);
         vertexConsumer.vertex(matrix, scale, -scale, 0).texture(1, 1).color(color);
         vertexConsumer.vertex(matrix, scale, scale, 0).texture(1, 0).color(color);
