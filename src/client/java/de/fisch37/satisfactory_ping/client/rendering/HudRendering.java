@@ -31,8 +31,10 @@ public class HudRendering {
         var centerY = bar.getCenterY(client.getWindow());
 
         // Magic math
-        var relativeYaw = Utilities.getYawOfCoord(client.player.getEyePos().subtract(ping.pos()).rotateYClockwise())
-                - client.gameRenderer.getCamera().getCameraYaw();
+        var relativeYaw = MathHelper.subtractAngles(
+                client.gameRenderer.getCamera().getCameraYaw(),
+                (float)Utilities.getYawOfCoord(client.player.getEyePos().subtract(ping.pos()).rotateYClockwise())
+        );
         var fractionalOffset = MathHelper.clamp(relativeYaw / MAX_YAW, -1, 1);
 
         int x = centerX + (int)(fractionalOffset * BAR_WIDTH / 2);
