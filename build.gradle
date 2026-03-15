@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom' version "1.12-SNAPSHOT"
+    id 'fabric-loom' version "${loom_version}"
     id 'maven-publish'
 }
 
@@ -13,7 +13,7 @@ base {
 loom {
     splitEnvironmentSourceSets()
 
-    accessWidenerPath = file("src/main/resources/satisfactory_ping.accesswidener")
+    accessWidenerPath = file("src/main/resources/satisfactory_ping.classtweaker")
     mods {
         "satisfactory_ping" {
             sourceSet sourceSets.main
@@ -93,6 +93,10 @@ jar {
     from("LICENSE") {
         rename { "${it}_${project.archivesBaseName}" }
     }
+}
+
+build {
+    version = "${mod_version}+${minecraft_version}"
 }
 
 // configure the maven publication

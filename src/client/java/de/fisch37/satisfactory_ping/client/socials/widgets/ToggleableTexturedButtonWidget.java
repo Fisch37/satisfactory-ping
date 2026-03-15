@@ -40,7 +40,7 @@ public class ToggleableTexturedButtonWidget extends ButtonWidget {
     }
 
     @Override
-    public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
+    protected void drawIcon(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
         context.drawGuiTexture(
                 RenderPipelines.GUI_TEXTURED, textures.get(getState(), isHovered()),
                 getX(), getY(), width, height

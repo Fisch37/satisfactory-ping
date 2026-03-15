@@ -8,6 +8,8 @@ import de.fisch37.satisfactory_ping.packets.BlockPingPayload;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.command.argument.*;
+import net.minecraft.command.permission.Permission;
+import net.minecraft.command.permission.PermissionLevel;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
@@ -30,7 +32,7 @@ public class PingCommand {
     }
 
     private static final LiteralArgumentBuilder<ServerCommandSource> COMMAND = literal("satisfactory-ping")
-        .requires(source -> source.hasPermissionLevel(2))
+        .requires(source -> source.getPermissions().hasPermission(new Permission.Level(PermissionLevel.GAMEMASTERS)))
         .then(argument("targets", EntityArgumentType.players())
                 .executes(context -> execute(context,
                         context.getSource().getPosition(), context.getSource().getWorld())

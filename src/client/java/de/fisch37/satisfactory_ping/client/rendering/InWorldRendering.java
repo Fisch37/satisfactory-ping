@@ -9,7 +9,7 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.RenderPhase;
+import net.minecraft.client.render.RenderSetup;
 import net.minecraft.util.Colors;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3d;
@@ -28,11 +28,12 @@ public class InWorldRendering {
                     .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
             .build());
     private static RenderLayer getRenderLayer(Identifier texture) {
-        // why is size this big? no clue! I copied most of this from RenderLayers.GUI_TEXTURED
-        return RenderLayer.of("ping", 786432, PIPELINE,
-                RenderLayer.MultiPhaseParameters.builder()
-                        .texture(new RenderPhase.Texture(texture, false))
-                        .build(false));
+        RenderSetup setup = RenderSetup.builder(PIPELINE)
+                .texture("Sampler0", texture)
+                // why is size this big? no clue! I copied most of this from RenderLayers.GUI_TEXTURED
+                .expectedBufferSize(786432)
+                .build();
+        return RenderLayer.of("ping", setup);
     }
 
     private final RenderingConfig config;
@@ -88,7 +89,6 @@ public class InWorldRendering {
 
     private void renderTexture(WorldRenderContext context, Matrix4f matrix, float scale) {
         var consumers = context.consumers();
-        assert consumers != null;
         var vertexConsumer = consumers.getBuffer(getRenderLayer(Utilities.fromGuiTexture(TEXTURE_ID)));
         vertexConsumer.vertex(matrix, -scale, -scale, 0).texture(0, 1).color(-1);
         vertexConsumer.vertex(matrix, scale, -scale, 0).texture(1, 1).color(-1);
@@ -111,7 +111,6 @@ public class InWorldRendering {
         int color = Utilities.getPingDataFromEntry(playerEntry).color();
 
         var consumers = context.consumers();
-        assert consumers != null;
         var vertexConsumer = consumers.getBuffer(getRenderLayer(Utilities.fromGuiTexture(BORDER_TEXTURE)));
         vertexConsumer.vertex(matrix, -scale, -scale, 0).texture(0, 1).color(color);
         vertexConsumer.vertex(matrix, scale, -scale, 0).texture(1, 1).color(color);
@@ -124,7 +123,6 @@ public class InWorldRendering {
     private void renderHead(WorldRenderContext context, PlayerListEntry player, Matrix4f matrix, float scale) {
         var texture = player.getSkinTextures().body().texturePath();
         var consumers = context.consumers();
-        assert consumers != null;
         var vertexConsumer = consumers.getBuffer(getRenderLayer(texture));
 
         vertexConsumer.vertex(matrix, -scale, -scale, 0).texture(8/64f, 16/64f).color(Colors.WHITE);
