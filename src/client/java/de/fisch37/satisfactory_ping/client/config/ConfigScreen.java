@@ -3,16 +3,17 @@ package de.fisch37.satisfactory_ping.client.config;
 import de.fisch37.satisfactory_ping.client.SatisfactoryPingClient;
 import de.fisch37.satisfactory_ping.client.config.widgets.DoubleSliderWidget;
 import de.fisch37.satisfactory_ping.client.config.widgets.SingleEntryElementList;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.*;
-import net.minecraft.screen.ScreenTexts;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.layouts.HeaderAndFooterLayout;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.CommonComponents;
+import net.minecraft.network.chat.Component;
 
 public class ConfigScreen extends Screen {
-    private static final Text TITLE = Text.translatable("options.satisfactory_ping.title");
+    private static final Component TITLE = Component.translatable("options.satisfactory_ping.title");
 
-    private final ThreePartsLayoutWidget layout = new ThreePartsLayoutWidget(this);
+    private final HeaderAndFooterLayout layout = new HeaderAndFooterLayout(this);
     private SingleEntryElementList body;
     private final Screen parent;
     private final Config config;
@@ -25,10 +26,10 @@ public class ConfigScreen extends Screen {
 
     @Override
     protected void init() {
-        layout.addHeader(TITLE, this.textRenderer);
-        layout.addFooter(ButtonWidget.builder(ScreenTexts.DONE, b -> this.close()).build());
-        layout.addBody(body = new SingleEntryElementList(
-                MinecraftClient.getInstance(),
+        layout.addTitleHeader(TITLE, this.font);
+        layout.addToFooter(Button.builder(CommonComponents.GUI_DONE, b -> this.onClose()).build());
+        layout.addToContents(body = new SingleEntryElementList(
+                Minecraft.getInstance(),
                 width, layout.getContentHeight(),
                 layout.getHeaderHeight(), 25
         ));
@@ -36,7 +37,7 @@ public class ConfigScreen extends Screen {
                 0, 0,
                 240, 18,
                 Config.MIN_ICON_HEIGHT, Config.MAX_ICON_HEIGHT, config.minimumIconHeight.get(),
-                value -> Text.translatableWithFallback(
+                value -> Component.translatableWithFallback(
                         "options.satisfactory_ping.icon_height",
                         "Minimum Apparent Icon Height: %f°".formatted(value),value
                 ),
@@ -49,7 +50,7 @@ public class ConfigScreen extends Screen {
                 0, 0,
                 240, 18,
                 Config.MIN_TEXT_HEIGHT, Config.MAX_TEXT_HEIGHT, config.textHeight.get(),
-                value -> Text.translatableWithFallback(
+                value -> Component.translatableWithFallback(
                         "options.satisfactory_ping.text_height",
                         "Apparent Text Height: %f°".formatted(value), value
                 ),
@@ -59,13 +60,13 @@ public class ConfigScreen extends Screen {
                 }
         ));
 
-        layout.forEachChild(this::addDrawableChild);
-        layout.refreshPositions();
+        layout.visitWidgets(this::addRenderableWidget);
+        layout.arrangeElements();
     }
 
     @Override
-    public void close() {
-        assert this.client != null;
-        this.client.setScreen(parent);
+    public void onClose() {
+        assert this.minecraft != null;
+        this.minecraft.setScreen(parent);
     }
 }

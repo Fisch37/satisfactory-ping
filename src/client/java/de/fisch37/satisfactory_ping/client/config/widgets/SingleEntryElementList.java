@@ -1,33 +1,32 @@
 package de.fisch37.satisfactory_ping.client.config.widgets;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.Element;
-import net.minecraft.client.gui.Selectable;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.gui.widget.ElementListWidget;
-
 import java.util.List;
 import java.util.Optional;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.ContainerObjectSelectionList;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.narration.NarratableEntry;
 
-public class SingleEntryElementList extends ElementListWidget<SingleEntryElementList.SingleEntry> {
-    public SingleEntryElementList(MinecraftClient minecraftClient, int width, int height, int y, int itemHeight) {
+public class SingleEntryElementList extends ContainerObjectSelectionList<SingleEntryElementList.SingleEntry> {
+    public SingleEntryElementList(Minecraft minecraftClient, int width, int height, int y, int itemHeight) {
         super(minecraftClient, width, height, y, itemHeight);
     }
 
-    public void add(ClickableWidget widget) {
+    public void add(AbstractWidget widget) {
         addEntry(new SingleEntry(widget));
     }
 
-    static class SingleEntry extends ElementListWidget.Entry<SingleEntry> {
-        private final ClickableWidget element;
+    static class SingleEntry extends ContainerObjectSelectionList.Entry<SingleEntry> {
+        private final AbstractWidget element;
 
-        public SingleEntry(ClickableWidget element) {
+        public SingleEntry(AbstractWidget element) {
             this.element = element;
         }
 
         @Override
-        public List<? extends Selectable> selectableChildren() {
+        public List<? extends NarratableEntry> narratables() {
             return List.of(element);
         }
 
@@ -35,20 +34,20 @@ public class SingleEntryElementList extends ElementListWidget<SingleEntryElement
          * Gets a list of all child GUI elements.
          */
         @Override
-        public List<? extends Element> children() {
+        public List<? extends GuiEventListener> children() {
             return List.of(element);
         }
 
         @Override
-        public Optional<Element> hoveredElement(double mouseX, double mouseY) {
-            return super.hoveredElement(mouseX, mouseY);
+        public Optional<GuiEventListener> getChildAt(double mouseX, double mouseY) {
+            return super.getChildAt(mouseX, mouseY);
         }
 
         /**
          * Renders an entry in a list.
          */
         @Override
-        public void render(DrawContext context, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
+        public void renderContent(GuiGraphics context, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
             element.setX(getContentX());
             element.setY(getContentY());
             element.render(context,mouseX, mouseY, deltaTicks);

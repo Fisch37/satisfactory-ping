@@ -3,7 +3,7 @@ package de.fisch37.satisfactory_ping.client.config;
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
 import de.fisch37.satisfactory_ping.client.SatisfactoryPingClient;
-import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screens.Screen;
 
 public class ModMenuEntrypoint implements ModMenuApi {
     @Override

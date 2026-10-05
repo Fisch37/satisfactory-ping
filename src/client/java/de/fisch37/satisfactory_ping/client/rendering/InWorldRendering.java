@@ -5,14 +5,14 @@ import com.mojang.blaze3d.platform.DepthTestFunction;
 import de.fisch37.satisfactory_ping.SatisfactoryPing;
 import de.fisch37.satisfactory_ping.packets.BlockPingPayload;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.network.PlayerListEntry;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.RenderSetup;
-import net.minecraft.util.Colors;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.rendertype.RenderSetup;
+import net.minecraft.client.renderer.rendertype.RenderType;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.CommonColors;
+import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 
 import java.util.UUID;
@@ -23,17 +23,17 @@ import static de.fisch37.satisfactory_ping.client.rendering.Utilities.lookAtRota
 public class InWorldRendering {
     public static final float MIN_SCALE = 0.25f;
     private static final RenderPipeline PIPELINE = RenderPipelines.register(
-            RenderPipeline.builder(RenderPipelines.POSITION_TEX_COLOR_SNIPPET)
-                    .withLocation(Identifier.of(SatisfactoryPing.MOD_ID, "pipeline/ping"))
+            RenderPipeline.builder(RenderPipelines.GUI_TEXTURED_SNIPPET)
+                    .withLocation(Identifier.fromNamespaceAndPath(SatisfactoryPing.MOD_ID, "pipeline/ping"))
                     .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
             .build());
-    private static RenderLayer getRenderLayer(Identifier texture) {
+    private static RenderType getRenderLayer(Identifier texture) {
         RenderSetup setup = RenderSetup.builder(PIPELINE)
-                .texture("Sampler0", texture)
+                .withTexture("Sampler0", texture)
                 // why is size this big? no clue! I copied most of this from RenderLayers.GUI_TEXTURED
-                .expectedBufferSize(786432)
-                .build();
-        return RenderLayer.of("ping", setup);
+                .bufferSize(786432)
+                .createRenderSetup();
+        return RenderType.create("ping", setup);
     }
 
     private final RenderingConfig config;
@@ -43,7 +43,7 @@ public class InWorldRendering {
     }
 
     public void renderIrisWorkaround(WorldRenderContext context, BlockPingPayload ping) {
-        Vec3d diff = getCameraPos(context).subtract(ping.pos());
+        Vec3 diff = getCameraPos(context).subtract(ping.pos());
         float scale = 0.25f;
         final double distanceToCamera = diff.length();
         double apparentHeight = 2*Math.atan(scale/distanceToCamera);
@@ -55,7 +55,7 @@ public class InWorldRendering {
     public void renderPing(WorldRenderContext context, BlockPingPayload ping) {
         // Running BEFORE_ENTITIES: matrixStack == null
         Matrix4f matrix = new Matrix4f();
-        Vec3d camPos = getCameraPos(context);
+        Vec3 camPos = getCameraPos(context);
         var pos = ping.pos();
         var diff = camPos.subtract(pos);
         matrix.translate(-(float)camPos.x, -(float)camPos.y, -(float)camPos.z);
@@ -90,20 +90,20 @@ public class InWorldRendering {
     private void renderTexture(WorldRenderContext context, Matrix4f matrix, float scale) {
         var consumers = context.consumers();
         var vertexConsumer = consumers.getBuffer(getRenderLayer(Utilities.fromGuiTexture(TEXTURE_ID)));
-        vertexConsumer.vertex(matrix, -scale, -scale, 0).texture(0, 1).color(-1);
-        vertexConsumer.vertex(matrix, scale, -scale, 0).texture(1, 1).color(-1);
-        vertexConsumer.vertex(matrix, scale, scale, 0).texture(1, 0).color(-1);
-        vertexConsumer.vertex(matrix, -scale, scale, 0).texture(0, 0).color(-1);
+        vertexConsumer.addVertex(matrix, -scale, -scale, 0).setUv(0, 1).setColor(-1);
+        vertexConsumer.addVertex(matrix, scale, -scale, 0).setUv(1, 1).setColor(-1);
+        vertexConsumer.addVertex(matrix, scale, scale, 0).setUv(1, 0).setColor(-1);
+        vertexConsumer.addVertex(matrix, -scale, scale, 0).setUv(0, 0).setColor(-1);
     }
 
     private void renderHeadWithBorder(WorldRenderContext context, UUID player, Matrix4f matrix, float scale) {
         // It's good that this is a personal project, because I feel like if I did this at a job, I'd get fired
-        final var networkHandler = context.gameRenderer().getClient().getNetworkHandler();
+        final var networkHandler = context.gameRenderer().getMinecraft().getConnection();
         if (networkHandler == null) {
             LOGGER.error("Network handler not available, cannot get player skin");
             return;
         }
-        final var playerEntry = networkHandler.getPlayerListEntry(player);
+        final var playerEntry = networkHandler.getPlayerInfo(player);
         if (playerEntry == null) {
             LOGGER.error("Cannot find player entry for {}, cannot get player skin", player.toString());
             return;
@@ -112,29 +112,29 @@ public class InWorldRendering {
 
         var consumers = context.consumers();
         var vertexConsumer = consumers.getBuffer(getRenderLayer(Utilities.fromGuiTexture(BORDER_TEXTURE)));
-        vertexConsumer.vertex(matrix, -scale, -scale, 0).texture(0, 1).color(color);
-        vertexConsumer.vertex(matrix, scale, -scale, 0).texture(1, 1).color(color);
-        vertexConsumer.vertex(matrix, scale, scale, 0).texture(1, 0).color(color);
-        vertexConsumer.vertex(matrix, -scale, scale, 0).texture(0, 0).color(color);
+        vertexConsumer.addVertex(matrix, -scale, -scale, 0).setUv(0, 1).setColor(color);
+        vertexConsumer.addVertex(matrix, scale, -scale, 0).setUv(1, 1).setColor(color);
+        vertexConsumer.addVertex(matrix, scale, scale, 0).setUv(1, 0).setColor(color);
+        vertexConsumer.addVertex(matrix, -scale, scale, 0).setUv(0, 0).setColor(color);
 
         renderHead(context, playerEntry, matrix, scale*(12/16f));
     }
 
-    private void renderHead(WorldRenderContext context, PlayerListEntry player, Matrix4f matrix, float scale) {
-        var texture = player.getSkinTextures().body().texturePath();
+    private void renderHead(WorldRenderContext context, PlayerInfo player, Matrix4f matrix, float scale) {
+        var texture = player.getSkin().body().texturePath();
         var consumers = context.consumers();
         var vertexConsumer = consumers.getBuffer(getRenderLayer(texture));
 
-        vertexConsumer.vertex(matrix, -scale, -scale, 0).texture(8/64f, 16/64f).color(Colors.WHITE);
-        vertexConsumer.vertex(matrix, scale, -scale, 0).texture(16/64f, 16/64f).color(Colors.WHITE);
-        vertexConsumer.vertex(matrix, scale, scale, 0).texture(16/64f, 8/64f).color(Colors.WHITE);
-        vertexConsumer.vertex(matrix, -scale, scale, 0).texture(8/64f, 8/64f).color(Colors.WHITE);
+        vertexConsumer.addVertex(matrix, -scale, -scale, 0).setUv(8/64f, 16/64f).setColor(CommonColors.WHITE);
+        vertexConsumer.addVertex(matrix, scale, -scale, 0).setUv(16/64f, 16/64f).setColor(CommonColors.WHITE);
+        vertexConsumer.addVertex(matrix, scale, scale, 0).setUv(16/64f, 8/64f).setColor(CommonColors.WHITE);
+        vertexConsumer.addVertex(matrix, -scale, scale, 0).setUv(8/64f, 8/64f).setColor(CommonColors.WHITE);
     }
 
 
-    private static void textHelper(WorldRenderContext context, Vec3d bottomCentre, String text, float height) {
-        final var textRenderer = context.gameRenderer().getClient().textRenderer;
-        final var scale = height/textRenderer.fontHeight;
+    private static void textHelper(WorldRenderContext context, Vec3 bottomCentre, String text, float height) {
+        final var textRenderer = context.gameRenderer().getMinecraft().font;
+        final var scale = height/textRenderer.lineHeight;
         var matrix = new Matrix4f();
         final var diff = bottomCentre.subtract(getCameraPos(context)).toVector3f();
         matrix.translate(diff);
@@ -149,18 +149,18 @@ public class InWorldRendering {
     }
 
     private static void textHelper(WorldRenderContext context, Matrix4f matrix, String text) {
-        final var textRenderer = context.gameRenderer().getClient().textRenderer;
-        textRenderer.draw(
+        final var textRenderer = context.gameRenderer().getMinecraft().font;
+        textRenderer.drawInBatch(
                 text,
-                -textRenderer.getWidth(text)/2f, 0,
-                Colors.WHITE, false,
+                -textRenderer.width(text)/2f, 0,
+                CommonColors.WHITE, false,
                 matrix, context.consumers(),
-                TextRenderer.TextLayerType.SEE_THROUGH,
+                Font.DisplayMode.SEE_THROUGH,
                 0, 255
         );
     }
 
-    private static Vec3d getCameraPos(WorldRenderContext context) {
+    private static Vec3 getCameraPos(WorldRenderContext context) {
         return context.worldState().cameraRenderState.pos;
     }
 }

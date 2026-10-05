@@ -14,10 +14,10 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.util.hit.HitResult;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.phys.HitResult;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,10 +32,10 @@ import java.util.concurrent.Executors;
 import static de.fisch37.satisfactory_ping.SatisfactoryPing.MOD_ID;
 
 public class SatisfactoryPingClient implements ClientModInitializer {
-    public static final KeyBinding PING_KEYBIND = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+    public static final KeyMapping PING_KEYBIND = KeyBindingHelper.registerKeyBinding(new KeyMapping(
             "key.satisfactory_ping.ping",
             GLFW.GLFW_KEY_LEFT_ALT,
-            KeyBinding.Category.MISC
+            KeyMapping.Category.MISC
     ));
     public static final Logger LOGGER = LoggerFactory.getLogger("SatisfactoryPing/Client");
     public static final double MAX_CAST_DISTANCE = 512;
@@ -63,25 +63,25 @@ public class SatisfactoryPingClient implements ClientModInitializer {
 
         ClientLifecycleEvents.CLIENT_STARTED.register(this::irisWorkaround);
         ClientTickEvents.START_CLIENT_TICK.register(client -> {
-            final var useKey = Objects.requireNonNull(KeyBinding.byId("key.use"));
+            final var useKey = Objects.requireNonNull(KeyMapping.get("key.use"));
             boolean lastTriggerState = triggerState;
-            triggerState = PING_KEYBIND.isPressed() && useKey.wasPressed();
+            triggerState = PING_KEYBIND.isDown() && useKey.consumeClick();
             if (!lastTriggerState && triggerState)
                 sendPing(client);
             // Prevent placing blocks when the key combo was triggered. This is a bit of a hack tbh
             //noinspection StatementWithEmptyBody
-            while(triggerState && useKey.wasPressed()) { }
-            if (triggerState) useKey.setPressed(false);
+            while(triggerState && useKey.consumeClick()) { }
+            if (triggerState) useKey.setDown(false);
         });
         ClientPlayNetworking.registerGlobalReceiver(BlockPingPayload.ID, (payload, context) -> {
-            if (payload.dimension().equals(context.player().getEntityWorld().getRegistryKey())) {
+            if (payload.dimension().equals(context.player().level().dimension())) {
                 if (disabledCauses.contains(payload.cause().orElse(null))) return;
                 // Yk this looks really bad, but if you look into the decomp,
                 // you'll find this is exactly how the wither spawn sound is handled (but they use 2 instead of 5)
-                var soundOrigin = payload.pos().subtract(context.player().getEyePos()).normalize().multiply(5);
-                context.player().getEntityWorld().playSoundClient(
+                var soundOrigin = payload.pos().subtract(context.player().getEyePosition()).normalize().scale(5);
+                context.player().level().playLocalSound(
                         soundOrigin.x, soundOrigin.y, soundOrigin.z,
-                        SatisfactoryPingSound.PING_SOUND_EVENT, SoundCategory.PLAYERS,
+                        SatisfactoryPingSound.PING_SOUND_EVENT, SoundSource.PLAYERS,
                         0.25F, 1.0F, false
                 );
                 rendering.add(payload);
@@ -113,16 +113,16 @@ public class SatisfactoryPingClient implements ClientModInitializer {
         }
     }
 
-    public void sendPing(MinecraftClient client) {
+    public void sendPing(Minecraft client) {
         if (client.player == null) return;
-        var result = client.player.raycast(MAX_CAST_DISTANCE, 1.0f, false);
+        var result = client.player.pick(MAX_CAST_DISTANCE, 1.0f, false);
         if (result.getType() == HitResult.Type.MISS) return;
 
-        var pos = result.getPos();
+        var pos = result.getLocation();
         // client.player.sendMessage(Text.literal("Press! " + pos.x + " " + pos.y + " " + pos.z), false);
         ClientPlayNetworking.send(new BlockPingPayload(
-                client.player.getEntityWorld().getRegistryKey(),
-                pos, Optional.of(client.player.getUuid()))
+                client.player.level().dimension(),
+                pos, Optional.of(client.player.getUUID()))
         );
     }
 
@@ -157,7 +157,7 @@ public class SatisfactoryPingClient implements ClientModInitializer {
         }
     }
 
-    private void irisWorkaround(MinecraftClient client) {
+    private void irisWorkaround(Minecraft client) {
         if (FabricLoader.getInstance().isModLoaded("iris"))
             rendering.enableIrisWorkaround();
     }

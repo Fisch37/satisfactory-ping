@@ -6,63 +6,64 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import de.fisch37.satisfactory_ping.packets.BlockPingPayload;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.command.CommandRegistryAccess;
-import net.minecraft.command.argument.*;
-import net.minecraft.command.permission.Permission;
-import net.minecraft.command.permission.PermissionLevel;
-import net.minecraft.entity.Entity;
-import net.minecraft.server.command.CommandManager;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.Vec3d;
-
+import net.minecraft.commands.CommandBuildContext;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.DimensionArgument;
+import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.commands.arguments.coordinates.Vec3Argument;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.Permission;
+import net.minecraft.server.permissions.PermissionLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.Vec3;
 import java.util.Collection;
 import java.util.Optional;
 
-import static net.minecraft.server.command.CommandManager.literal;
-import static net.minecraft.server.command.CommandManager.argument;
+import static net.minecraft.commands.Commands.literal;
+import static net.minecraft.commands.Commands.argument;
 
 public class PingCommand {
-    private static ServerWorld worldFromContext(CommandContext<ServerCommandSource> context) {
-        return context.getSource().getWorld();
+    private static ServerLevel worldFromContext(CommandContext<CommandSourceStack> context) {
+        return context.getSource().getLevel();
     }
-    private static Vec3d posFromContextWithArg(CommandContext<ServerCommandSource> context) {
-        return Vec3ArgumentType.getPosArgument(context, "pos").getPos(context.getSource());
+    private static Vec3 posFromContextWithArg(CommandContext<CommandSourceStack> context) {
+        return Vec3Argument.getCoordinates(context, "pos").getPosition(context.getSource());
     }
 
-    private static final LiteralArgumentBuilder<ServerCommandSource> COMMAND = literal("satisfactory-ping")
-        .requires(source -> source.getPermissions().hasPermission(new Permission.Level(PermissionLevel.GAMEMASTERS)))
-        .then(argument("targets", EntityArgumentType.players())
+    private static final LiteralArgumentBuilder<CommandSourceStack> COMMAND = literal("satisfactory-ping")
+        .requires(source -> source.permissions().hasPermission(new Permission.HasCommandLevel(PermissionLevel.GAMEMASTERS)))
+        .then(argument("targets", EntityArgument.players())
                 .executes(context -> execute(context,
-                        context.getSource().getPosition(), context.getSource().getWorld())
+                        context.getSource().getPosition(), context.getSource().getLevel())
                 )
-                .then(argument("pos", Vec3ArgumentType.vec3())
+                .then(argument("pos", Vec3Argument.vec3())
                         .executes(context -> execute(context, 
-                                posFromContextWithArg(context), context.getSource().getWorld())
+                                posFromContextWithArg(context), context.getSource().getLevel())
                         )
-                        .then(argument("dimension", DimensionArgumentType.dimension())
+                        .then(argument("dimension", DimensionArgument.dimension())
                                 .executes(context -> execute(context,
                                         posFromContextWithArg(context),
-                                        DimensionArgumentType.getDimensionArgument(context, "dimension")
+                                        DimensionArgument.getDimension(context, "dimension")
                                 ))
                         )
                 )
         );
 
     public static void register(
-            CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess registryAccess,
-            CommandManager.RegistrationEnvironment environ
+            CommandDispatcher<CommandSourceStack> dispatcher, CommandBuildContext registryAccess,
+            Commands.CommandSelection environ
     ) {
         dispatcher.register(COMMAND);
     }
 
-    public static int execute(CommandContext<ServerCommandSource> context, Vec3d pos, ServerWorld dimension)
+    public static int execute(CommandContext<CommandSourceStack> context, Vec3 pos, ServerLevel dimension)
             throws CommandSyntaxException {
 
-        Collection<ServerPlayerEntity> targets = EntityArgumentType.getPlayers(context, "targets");
-        var payload = new BlockPingPayload(dimension.getRegistryKey(), pos,
-                Optional.ofNullable(context.getSource().getPlayer()).map(Entity::getUuid)
+        Collection<ServerPlayer> targets = EntityArgument.getPlayers(context, "targets");
+        var payload = new BlockPingPayload(dimension.dimension(), pos,
+                Optional.ofNullable(context.getSource().getPlayer()).map(Entity::getUUID)
         );
         int sentTo = 0;
         for (var player : targets) {

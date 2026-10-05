@@ -9,10 +9,10 @@ import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.RenderTickCounter;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.Pair;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.Tuple;
 import net.minecraft.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,15 +23,15 @@ import static de.fisch37.satisfactory_ping.SatisfactoryPing.MOD_ID;
 
 public class SatisfactoryPingRenderingHook {
     public static final Logger LOGGER = LoggerFactory.getLogger("SatisfactoryPing/Rendering");
-    public static final Identifier PING_BAR = Identifier.of(MOD_ID, "ping_bar");
-    public static final Identifier TEXTURE_ID = Identifier.of(MOD_ID, "hud/location_ping");
-    public static final Identifier BORDER_TEXTURE = Identifier.of(MOD_ID, "hud/ping_border");
+    public static final Identifier PING_BAR = Identifier.fromNamespaceAndPath(MOD_ID, "ping_bar");
+    public static final Identifier TEXTURE_ID = Identifier.fromNamespaceAndPath(MOD_ID, "hud/location_ping");
+    public static final Identifier BORDER_TEXTURE = Identifier.fromNamespaceAndPath(MOD_ID, "hud/ping_border");
     private static final double PING_RENDER_TIME = 5_000;
 
     private final SatisfactoryPingClient mod;
     private final InWorldRendering inWorld;
     private final RenderingConfig config;
-    private final ConcurrentLinkedQueue<Pair<BlockPingPayload, Long>> renderQueue = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<Tuple<BlockPingPayload, Long>> renderQueue = new ConcurrentLinkedQueue<>();
 
     public SatisfactoryPingRenderingHook(SatisfactoryPingClient mod) {
         this.mod = mod;
@@ -54,12 +54,12 @@ public class SatisfactoryPingRenderingHook {
         LOGGER.warn("Applied a workaround to fix text not rendering when Iris shaders is installed. You may encounter slight visual oddities with distance markers.");
         config.enableIrisWorkaround();
         WorldRenderEvents.AFTER_ENTITIES.register(context ->
-            renderQueue.forEach(pair -> inWorld.renderIrisWorkaround(context, pair.getLeft()))
+            renderQueue.forEach(tuple -> inWorld.renderIrisWorkaround(context, tuple.getA()))
         );
     }
 
     public void add(BlockPingPayload ping) {
-        renderQueue.add(new Pair<>(ping, Util.getMeasuringTimeMs()));
+        renderQueue.add(new Tuple<>(ping, Util.getMillis()));
     }
 
     /**
@@ -79,18 +79,18 @@ public class SatisfactoryPingRenderingHook {
     }
 
     private void renderSequence(WorldRenderContext context) {
-        long millis = Util.getMeasuringTimeMs();
+        long millis = Util.getMillis();
         for (var item : renderQueue) {
-            if (millis - item.getRight() <= PING_RENDER_TIME) {
-                inWorld.renderPing(context, item.getLeft());
+            if (millis - item.getB() <= PING_RENDER_TIME) {
+                inWorld.renderPing(context, item.getA());
             } else {
                 renderQueue.remove(item);
             }
         }
     }
 
-    private void renderPingBar(DrawContext context, RenderTickCounter tickCounter) {
+    private void renderPingBar(GuiGraphics context, DeltaTracker tickCounter) {
         renderQueue.forEach(ping ->
-                HudRendering.renderPingOnBar(context, ping.getLeft(), tickCounter));
+                HudRendering.renderPingOnBar(context, ping.getA(), tickCounter));
     }
 }

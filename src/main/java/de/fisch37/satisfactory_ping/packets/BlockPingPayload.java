@@ -1,32 +1,32 @@
 package de.fisch37.satisfactory_ping.packets;
 
-import net.minecraft.network.RegistryByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.codec.PacketCodecs;
-import net.minecraft.network.packet.CustomPayload;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.util.Uuids;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
 import java.util.UUID;
+import net.minecraft.core.UUIDUtil;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 
 import static de.fisch37.satisfactory_ping.SatisfactoryPing.PING_PACKET_ID;
 
-public record BlockPingPayload(RegistryKey<World> dimension, Vec3d pos, Optional<UUID> cause) implements CustomPayload {
-    public static final CustomPayload.Id<BlockPingPayload> ID = new CustomPayload.Id<>(PING_PACKET_ID);
-    public static final PacketCodec<RegistryByteBuf, BlockPingPayload> CODEC = PacketCodec.tuple(
-            RegistryKey.createPacketCodec(RegistryKeys.WORLD), BlockPingPayload::dimension,
-            Vec3d.PACKET_CODEC, BlockPingPayload::pos,
-            PacketCodecs.optional(Uuids.PACKET_CODEC), BlockPingPayload::cause,
+public record BlockPingPayload(ResourceKey<Level> dimension, Vec3 pos, Optional<UUID> cause) implements CustomPacketPayload {
+    public static final CustomPacketPayload.Type<BlockPingPayload> ID = new CustomPacketPayload.Type<>(PING_PACKET_ID);
+    public static final StreamCodec<RegistryFriendlyByteBuf, BlockPingPayload> CODEC = StreamCodec.composite(
+            ResourceKey.streamCodec(Registries.DIMENSION), BlockPingPayload::dimension,
+            Vec3.STREAM_CODEC, BlockPingPayload::pos,
+            ByteBufCodecs.optional(UUIDUtil.STREAM_CODEC), BlockPingPayload::cause,
             BlockPingPayload::new
     );
 
     @Override
-    public Id<? extends CustomPayload> getId() {
+    public Type<? extends CustomPacketPayload> type() {
         return ID;
     }
 
