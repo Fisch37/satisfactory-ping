@@ -8,6 +8,7 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
+import org.jspecify.annotations.NonNull;
 
 public class SingleEntryElementList extends ContainerObjectSelectionList<SingleEntryElementList.SingleEntry> {
     public SingleEntryElementList(Minecraft minecraftClient, int width, int height, int y, int itemHeight) {
@@ -26,7 +27,7 @@ public class SingleEntryElementList extends ContainerObjectSelectionList<SingleE
         }
 
         @Override
-        public List<? extends NarratableEntry> narratables() {
+        public @NonNull List<? extends NarratableEntry> narratables() {
             return List.of(element);
         }
 
@@ -34,12 +35,12 @@ public class SingleEntryElementList extends ContainerObjectSelectionList<SingleE
          * Gets a list of all child GUI elements.
          */
         @Override
-        public List<? extends GuiEventListener> children() {
+        public @NonNull List<? extends GuiEventListener> children() {
             return List.of(element);
         }
 
         @Override
-        public Optional<GuiEventListener> getChildAt(double mouseX, double mouseY) {
+        public @NonNull Optional<GuiEventListener> getChildAt(double mouseX, double mouseY) {
             return super.getChildAt(mouseX, mouseY);
         }
 
@@ -47,7 +48,7 @@ public class SingleEntryElementList extends ContainerObjectSelectionList<SingleE
          * Renders an entry in a list.
          */
         @Override
-        public void renderContent(GuiGraphics context, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
+        public void renderContent(@NonNull GuiGraphics context, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
             element.setX(getContentX());
             element.setY(getContentY());
             element.render(context,mouseX, mouseY, deltaTicks);

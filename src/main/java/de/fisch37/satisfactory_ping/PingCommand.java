@@ -52,8 +52,8 @@ public class PingCommand {
         );
 
     public static void register(
-            CommandDispatcher<CommandSourceStack> dispatcher, CommandBuildContext registryAccess,
-            Commands.CommandSelection environ
+            CommandDispatcher<CommandSourceStack> dispatcher, CommandBuildContext ignored,
+            Commands.CommandSelection ignored1
     ) {
         dispatcher.register(COMMAND);
     }

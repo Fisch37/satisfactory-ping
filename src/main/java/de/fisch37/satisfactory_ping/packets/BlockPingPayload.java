@@ -13,6 +13,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.NonNull;
 
 import static de.fisch37.satisfactory_ping.SatisfactoryPing.PING_PACKET_ID;
 
@@ -26,7 +27,7 @@ public record BlockPingPayload(ResourceKey<Level> dimension, Vec3 pos, Optional<
     );
 
     @Override
-    public Type<? extends CustomPacketPayload> type() {
+    public @NonNull Type<? extends CustomPacketPayload> type() {
         return ID;
     }
 

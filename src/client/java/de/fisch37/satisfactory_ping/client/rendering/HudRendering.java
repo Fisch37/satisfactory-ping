@@ -17,7 +17,7 @@ public class HudRendering {
     private static final int BAR_WIDTH = 182, PING_WIDTH = 8, PING_HEIGHT = 8;
     private static final double MAX_YAW = 60;
 
-    public static void renderPingOnBar(GuiGraphics context, BlockPingPayload ping, DeltaTracker tickCounter) {
+    public static void renderPingOnBar(GuiGraphics context, BlockPingPayload ping, DeltaTracker ignored) {
         var client = Minecraft.getInstance();
         if (client.player == null
                 || !client.player.level().dimension().equals(ping.dimension()))

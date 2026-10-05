@@ -105,7 +105,7 @@ public class InWorldRendering {
         }
         final var playerEntry = networkHandler.getPlayerInfo(player);
         if (playerEntry == null) {
-            LOGGER.error("Cannot find player entry for {}, cannot get player skin", player.toString());
+            LOGGER.error("Cannot find player entry for {}, cannot get player skin", player);
             return;
         }
         int color = Utilities.getPingDataFromEntry(playerEntry).color();
