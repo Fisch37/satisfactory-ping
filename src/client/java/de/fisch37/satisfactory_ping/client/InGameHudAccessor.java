@@ -1,18 +1,25 @@
 package de.fisch37.satisfactory_ping.client;
 
 import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.contextualbar.ContextualBarRenderer;
+import net.minecraft.client.gui.Hud;
+import net.minecraft.client.gui.contextualbar.ContextualBar;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
 public interface InGameHudAccessor {
-    Pair<Gui.ContextualInfo, ContextualBarRenderer> satisfactory_ping$getCurrentBar();
+    Pair<Hud.ContextualInfo, ContextualBar> satisfactory_ping$getCurrentBar();
 
-    static Gui.ContextualInfo getCurrentBarType(@NotNull Gui obj) {
+    static Hud.ContextualInfo getCurrentBarType(@NotNull Gui obj) {
+        return getCurrentBarType(obj.hud);
+    }
+    static Hud.ContextualInfo getCurrentBarType(@NotNull Hud obj) {
         return ((InGameHudAccessor)obj).satisfactory_ping$getCurrentBar().getLeft();
     }
 
-    static ContextualBarRenderer getCurrentBar(@NotNull Gui obj) {
+    static ContextualBar getCurrentBar(@NotNull Gui obj) {
+        return getCurrentBar(obj.hud);
+    }
+    static ContextualBar getCurrentBar(@NotNull Hud obj) {
         return ((InGameHudAccessor)obj).satisfactory_ping$getCurrentBar().getRight();
     }
 }

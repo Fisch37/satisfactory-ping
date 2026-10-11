@@ -11,14 +11,13 @@ import de.maxhenkel.configbuilder.ConfigBuilder;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.phys.HitResult;
-import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,9 +31,11 @@ import java.util.concurrent.Executors;
 import static de.fisch37.satisfactory_ping.SatisfactoryPing.MOD_ID;
 
 public class SatisfactoryPingClient implements ClientModInitializer {
-    public static final KeyMapping PING_KEYBIND = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+    private static final int KEY_LEFT_ALT = 342;
+
+    public static final KeyMapping PING_KEYBIND = KeyMappingHelper.registerKeyMapping(new KeyMapping(
             "key.satisfactory_ping.ping",
-            GLFW.GLFW_KEY_LEFT_ALT,
+            KEY_LEFT_ALT,
             KeyMapping.Category.MISC
     ));
     public static final Logger LOGGER = LoggerFactory.getLogger("SatisfactoryPing/Client");

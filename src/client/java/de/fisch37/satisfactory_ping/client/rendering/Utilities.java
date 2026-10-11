@@ -1,5 +1,8 @@
 package de.fisch37.satisfactory_ping.client.rendering;
 
+import net.minecraft.world.scores.PlayerTeam;
+import net.minecraft.world.scores.TeamColor;
+import org.apache.commons.lang3.tuple.Pair;
 import org.joml.Vector3f;
 
 import java.util.Optional;
@@ -22,6 +25,10 @@ public class Utilities {
         );
     }
 
+    public static <L, R> Pair<L, R> convert(com.mojang.datafixers.util.Pair<L, R> input) {
+        return Pair.of(input.getFirst(), input.getSecond());
+    }
+
     /**
      * Gets the yaw of a position relative to the origin.
      * (Hint: Use {@link Vec3#subtract(Vec3)} to normalize to the origin)
@@ -32,7 +39,8 @@ public class Utilities {
 
     static PingRenderData getPingDataFromEntry(PlayerInfo playerListEntry) {
         int color = Optional.ofNullable(playerListEntry.getTeam())
-                .flatMap(team -> Optional.ofNullable(team.getColor().getColor()))
+                .flatMap(PlayerTeam::getColor)
+                .map(TeamColor::rgb)
                 .orElse(CommonColors.WHITE);
         return new PingRenderData(playerListEntry.getSkin().body().id(), color);
     }

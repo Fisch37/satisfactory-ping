@@ -3,7 +3,7 @@ package de.fisch37.satisfactory_ping.client.config.widgets;
 import java.util.List;
 import java.util.Optional;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -48,10 +48,15 @@ public class SingleEntryElementList extends ContainerObjectSelectionList<SingleE
          * Renders an entry in a list.
          */
         @Override
-        public void renderContent(@NonNull GuiGraphics context, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
+        public void extractContent(
+                @NonNull GuiGraphicsExtractor graphics,
+                int mouseX, int mouseY,
+                boolean hovered,
+                float deltaTicks
+        ) {
             element.setX(getContentX());
             element.setY(getContentY());
-            element.render(context,mouseX, mouseY, deltaTicks);
+            element.extractRenderState(graphics, mouseX, mouseY, deltaTicks);
         }
     }
 }

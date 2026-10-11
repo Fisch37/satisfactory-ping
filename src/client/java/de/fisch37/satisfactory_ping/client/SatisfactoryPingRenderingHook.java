@@ -5,15 +5,15 @@ import de.fisch37.satisfactory_ping.client.rendering.HudRendering;
 import de.fisch37.satisfactory_ping.client.rendering.InWorldRendering;
 import de.fisch37.satisfactory_ping.client.rendering.RenderingConfig;
 import de.fisch37.satisfactory_ping.packets.BlockPingPayload;
-import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
-import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
+import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.minecraft.client.DeltaTracker;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.resources.Identifier;
-import net.minecraft.util.Tuple;
 import net.minecraft.util.Util;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,13 +31,13 @@ public class SatisfactoryPingRenderingHook {
     private final SatisfactoryPingClient mod;
     private final InWorldRendering inWorld;
     private final RenderingConfig config;
-    private final ConcurrentLinkedQueue<Tuple<BlockPingPayload, Long>> renderQueue = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<Pair<BlockPingPayload, Long>> renderQueue = new ConcurrentLinkedQueue<>();
 
     public SatisfactoryPingRenderingHook(SatisfactoryPingClient mod) {
         this.mod = mod;
         config = new RenderingConfig();
         inWorld = new InWorldRendering(config);
-        WorldRenderEvents.END_MAIN.register(this::renderSequence);
+        LevelRenderEvents.END_MAIN.register(this::renderSequence);
         HudElementRegistry.attachElementAfter(VanillaHudElements.SUBTITLES, PING_BAR, this::renderPingBar);
         setMinimumHeight(Config.DEFAULT_ICON_HEIGHT);
         setApparentTextSize(Config.DEFAULT_TEXT_HEIGHT);
@@ -53,13 +53,14 @@ public class SatisfactoryPingRenderingHook {
         // but also since we're now rendering text before the translucency layer is drawn, text will be partially obscured by translucent blocks such as glass or water.
         LOGGER.warn("Applied a workaround to fix text not rendering when Iris shaders is installed. You may encounter slight visual oddities with distance markers.");
         config.enableIrisWorkaround();
-        WorldRenderEvents.AFTER_ENTITIES.register(context ->
-            renderQueue.forEach(tuple -> inWorld.renderIrisWorkaround(context, tuple.getA()))
-        );
+// TODO: Remove this if iris workaround is no longer necessary
+//        LevelRenderEvents.AFTER_ENTITIES.register(context ->
+//            renderQueue.forEach(pair -> inWorld.renderIrisWorkaround(context, pair.getLeft()))
+//        );
     }
 
     public void add(BlockPingPayload ping) {
-        renderQueue.add(new Tuple<>(ping, Util.getMillis()));
+        renderQueue.add(Pair.of(ping, Util.getMillis()));
     }
 
     /**
@@ -78,19 +79,15 @@ public class SatisfactoryPingRenderingHook {
         config.setTextApparentHeight(degrees);
     }
 
-    private void renderSequence(WorldRenderContext context) {
+    private void renderSequence(LevelRenderContext context) {
         long millis = Util.getMillis();
-        for (var item : renderQueue) {
-            if (millis - item.getB() <= PING_RENDER_TIME) {
-                inWorld.renderPing(context, item.getA());
-            } else {
-                renderQueue.remove(item);
-            }
-        }
+        renderQueue.removeIf(item -> millis - item.getRight() > PING_RENDER_TIME);
+        inWorld.extraction(context, renderQueue.stream().map(Pair::getLeft));
+        inWorld.drawing(context);
     }
 
-    private void renderPingBar(GuiGraphics context, DeltaTracker tickCounter) {
+    private void renderPingBar(GuiGraphicsExtractor context, DeltaTracker tickCounter) {
         renderQueue.forEach(ping ->
-                HudRendering.renderPingOnBar(context, ping.getA(), tickCounter));
+                HudRendering.renderPingOnBar(context, ping.getLeft(), tickCounter));
     }
 }

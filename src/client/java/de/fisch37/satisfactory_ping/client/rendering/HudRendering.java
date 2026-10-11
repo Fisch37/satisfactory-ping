@@ -5,8 +5,8 @@ import de.fisch37.satisfactory_ping.client.SatisfactoryPingRenderingHook;
 import de.fisch37.satisfactory_ping.packets.BlockPingPayload;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.Hud;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.util.Mth;
@@ -17,13 +17,13 @@ public class HudRendering {
     private static final int BAR_WIDTH = 182, PING_WIDTH = 8, PING_HEIGHT = 8;
     private static final double MAX_YAW = 60;
 
-    public static void renderPingOnBar(GuiGraphics context, BlockPingPayload ping, DeltaTracker ignored) {
+    public static void renderPingOnBar(GuiGraphicsExtractor extractor, BlockPingPayload ping, DeltaTracker ignored) {
         var client = Minecraft.getInstance();
         if (client.player == null
                 || !client.player.level().dimension().equals(ping.dimension()))
             return;
         var barType = InGameHudAccessor.getCurrentBarType(client.gui);
-        if (barType != Gui.ContextualInfo.LOCATOR && barType != Gui.ContextualInfo.EXPERIENCE)
+        if (barType != Hud.ContextualInfo.LOCATOR && barType != Hud.ContextualInfo.EXPERIENCE)
             return;
 
         var bar = InGameHudAccessor.getCurrentBar(client.gui);
@@ -32,7 +32,7 @@ public class HudRendering {
 
         // Magic math
         var relativeYaw = Mth.degreesDifference(
-                client.gameRenderer.getMainCamera().yaw(),
+                client.player.getYRot(),
                 (float)Utilities.getYawOfCoord(client.player.getEyePosition().subtract(ping.pos()).rotateClockwise90())
         );
         var fractionalOffset = Mth.clamp(relativeYaw / MAX_YAW, -1, 1);
@@ -43,21 +43,21 @@ public class HudRendering {
                     var networkHandler = client.getConnection();
                     PlayerInfo playerListEntry;
                     if (networkHandler != null && (playerListEntry = networkHandler.getPlayerInfo(uuid)) != null) {
-                        drawPing(context, x, centerY, Utilities.getPingDataFromEntry(playerListEntry));
+                        drawPing(extractor, x, centerY, Utilities.getPingDataFromEntry(playerListEntry));
                     } else {
                         if (networkHandler == null)
                             LOGGER.warn("Tried to render ping without network handler");
                         else
                             LOGGER.warn("Could not get player list entry for player {}", uuid);
-                        drawPlayerlessPing(context, x, centerY);
+                        drawPlayerlessPing(extractor, x, centerY);
                     }
                 },
-                () -> drawPlayerlessPing(context, x, centerY)
+                () -> drawPlayerlessPing(extractor, x, centerY)
         );
     }
 
-    private static void drawPlayerlessPing(GuiGraphics context, int x, int y) {
-        context.blitSprite(
+    private static void drawPlayerlessPing(GuiGraphicsExtractor extractor, int x, int y) {
+        extractor.blitSprite(
                 RenderPipelines.GUI_TEXTURED,
                 SatisfactoryPingRenderingHook.TEXTURE_ID,
                 x - PING_WIDTH / 2, y - 2,
@@ -65,8 +65,8 @@ public class HudRendering {
         );
     }
 
-    private static void drawPing(GuiGraphics context, int x, int y, Utilities.PingRenderData data) {
-        context.blit(
+    private static void drawPing(GuiGraphicsExtractor extractor, int x, int y, Utilities.PingRenderData data) {
+        extractor.blit(
                 RenderPipelines.GUI_TEXTURED,
                 data.texture(),
                 x - 8 / 2, y - 2,
@@ -74,7 +74,7 @@ public class HudRendering {
                 8, 8,
                 64, 64
         );
-        context.blitSprite(
+        extractor.blitSprite(
                 RenderPipelines.GUI_TEXTURED,
                 SatisfactoryPingRenderingHook.BORDER_TEXTURE,
                 x - 10 / 2, y - 3,

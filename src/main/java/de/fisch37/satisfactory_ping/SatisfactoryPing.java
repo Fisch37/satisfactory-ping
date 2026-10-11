@@ -17,8 +17,8 @@ public class SatisfactoryPing implements ModInitializer {
     @Override
     public void onInitialize() {
         CommandRegistrationCallback.EVENT.register(PingCommand::register);
-        PayloadTypeRegistry.playC2S().register(BlockPingPayload.ID, BlockPingPayload.CODEC);
-        PayloadTypeRegistry.playS2C().register(BlockPingPayload.ID, BlockPingPayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(BlockPingPayload.ID, BlockPingPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(BlockPingPayload.ID, BlockPingPayload.CODEC);
 
         ServerPlayNetworking.registerGlobalReceiver(BlockPingPayload.ID, (payload, context) ->
                 context.server().getPlayerList()
